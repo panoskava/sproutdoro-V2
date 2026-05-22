@@ -45,18 +45,27 @@ export function createPlantCard(props: PlantCardProps): HTMLElement {
     details.className = 'flex flex-col gap-2 flex-1'
 
     const badge = document.createElement('span')
-    badge.className =
-      'inline-flex self-start px-3 py-1 rounded-full text-xs font-label font-semibold bg-secondary/10 text-secondary'
-    badge.textContent = 'Masterpiece'
+    badge.className = `inline-flex self-start px-3 py-1 rounded-full text-xs font-label font-semibold ${RARITY_CLASSES[plant.rarity]}`
+    badge.textContent =
+      plant.rarity.charAt(0).toUpperCase() + plant.rarity.slice(1)
 
     const name = document.createElement('h3')
     name.className = 'font-headline text-xl font-bold text-on-surface'
     name.textContent = plant.type
 
-    const meta = document.createElement('p')
-    meta.className = 'text-sm text-on-surface/60'
+    const meta = document.createElement('div')
+    meta.className = 'flex items-center gap-2 text-sm text-on-surface/60'
     const plantedDate = new Date(plant.plantedAt).toLocaleDateString()
-    meta.textContent = `Planted on ${plantedDate} • Level ${plant.level}`
+
+    const dateText = document.createElement('span')
+    dateText.textContent = `Planted on ${plantedDate} •`
+
+    const levelText = document.createElement('span')
+    levelText.className = `font-label font-semibold ${LEVEL_CLASSES[plant.level]}`
+    levelText.textContent = `Level ${plant.level}`
+
+    meta.appendChild(dateText)
+    meta.appendChild(levelText)
 
     details.appendChild(badge)
     details.appendChild(name)
