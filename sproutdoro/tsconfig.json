@@ -12,6 +12,7 @@
     "noEmit": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "strict": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },

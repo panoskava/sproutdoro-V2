@@ -1,5 +1,4 @@
 import './styles/main.css'
-import './styles/animations.css'
 
 // App entry point — screens will be mounted here
 const app = document.querySelector<HTMLDivElement>('#app')
