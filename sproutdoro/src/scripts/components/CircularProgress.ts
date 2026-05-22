@@ -30,6 +30,7 @@ export function createCircularProgress(props: CircularProgressProps): SVGSVGElem
   svg.setAttribute('height', `${size}`)
   svg.setAttribute('viewBox', `0 0 ${size} ${size}`)
   svg.classList.add('timer-svg')
+  svg.style.transform = 'rotate(-90deg)'
 
   // Background track circle (thin, muted)
   const track = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
