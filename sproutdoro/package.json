@@ -1,7 +1,7 @@
 {
   "name": "sproutdoro",
   "private": true,
-  "version": "0.0.0",
+  "version": "2.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,14 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "typescript": "~6.0.2",
-    "vite": "^8.0.12"
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0",
+    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "vite-plugin-pwa": "^0.17.0"
+  },
+  "dependencies": {
+    "idb": "^7.1.1"
   }
 }
