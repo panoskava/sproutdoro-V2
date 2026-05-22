@@ -1,7 +1,7 @@
 import { openDB, type IDBPDatabase } from 'idb'
 import type { Settings, Session, Plant, Insights } from '../types'
 
-const DB_NAME = 'sproutdoro'
+const DB_NAME = 'sproutdoro-db'
 const DB_VERSION = 1
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -91,8 +91,8 @@ export async function createSession(session: Session): Promise<void> {
 }
 
 export async function getSessions(
-  startDate?: number,
-  endDate?: number
+  startDate?: Date,
+  endDate?: Date
 ): Promise<Session[]> {
   try {
     const db = await getDB()
@@ -119,8 +119,8 @@ export async function getTodaySessions(): Promise<Session[]> {
     now.getFullYear(),
     now.getMonth(),
     now.getDate()
-  ).getTime()
-  const endOfDay = startOfDay + 24 * 60 * 60 * 1000 - 1
+  )
+  const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1)
   return getSessions(startOfDay, endOfDay)
 }
 
@@ -203,12 +203,13 @@ function toISODate(ts: number): string {
 
 function getWeekStart(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00')
-  const day = d.getDay() // 0 = Sunday
-  const diff = d.getDate() - day
-  const ws = new Date(d.setDate(diff))
-  const y = ws.getFullYear()
-  const m = String(ws.getMonth() + 1).padStart(2, '0')
-  const dayStr = String(ws.getDate()).padStart(2, '0')
+  const day = d.getDay() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const diff = (day === 0 ? -6 : 1) - day // Adjust so Monday is start of week
+  d.setDate(d.getDate() + diff)
+  d.setHours(0, 0, 0, 0)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const dayStr = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${dayStr}`
 }
 
