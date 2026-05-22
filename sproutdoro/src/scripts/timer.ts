@@ -7,150 +7,7 @@ import {
   updateCircularProgress,
 } from './components/CircularProgress'
 import { getSettings, createSession, getTodaySessions } from './storage'
-import type { Settings, Session } from '../types'
-
-export interface TimerState {
-  mode: 'work' | 'shortBreak' | 'longBreak'
-  state: 'idle' | 'running' | 'paused' | 'complete'
-  remainingSeconds: number
-  totalSeconds: number
-  sessionCount: number
-}
-
-export class Timer {
-  private settings: Settings
-  private onUpdate: (state: TimerState) => void
-  private onComplete: (mode: string) => void
-  private state: TimerState
-  private intervalId: number | null = null
-  private transitionTimeoutId: number | null = null
-
-  constructor(
-    settings: Settings,
-    onUpdate: (state: TimerState) => void,
-    onComplete: (mode: string) => void
-  ) {
-    this.settings = settings
-    this.onUpdate = onUpdate
-    this.onComplete = onComplete
-    const totalSeconds = settings.workDuration * 60
-    this.state = {
-      mode: 'work',
-      state: 'idle',
-      remainingSeconds: totalSeconds,
-      totalSeconds,
-      sessionCount: 0,
-    }
-  }
-
-  private tick() {
-    if (this.state.state !== 'running') return
-    this.state.remainingSeconds -= 1
-    if (this.state.remainingSeconds <= 0) {
-      this.state.remainingSeconds = 0
-      this.state.state = 'complete'
-      this.clearInterval()
-      const completedMode = this.state.mode
-      if (completedMode === 'work') {
-        this.state.sessionCount += 1
-      }
-      this.onComplete(completedMode)
-      this.transitionTimeoutId = window.setTimeout(() => {
-        this.transitionToNextMode()
-      }, 2000)
-    }
-    this.onUpdate({ ...this.state })
-  }
-
-  private transitionToNextMode() {
-    let nextMode: 'work' | 'shortBreak' | 'longBreak'
-    if (this.state.mode === 'work') {
-      if (
-        this.state.sessionCount > 0 &&
-        this.state.sessionCount % 4 === 0
-      ) {
-        nextMode = 'longBreak'
-      } else {
-        nextMode = 'shortBreak'
-      }
-    } else {
-      nextMode = 'work'
-    }
-
-    this.state.mode = nextMode
-    this.state.state = 'idle'
-    this.state.totalSeconds =
-      nextMode === 'work'
-        ? this.settings.workDuration * 60
-        : nextMode === 'shortBreak'
-          ? this.settings.shortBreakDuration * 60
-          : this.settings.longBreakDuration * 60
-    this.state.remainingSeconds = this.state.totalSeconds
-    this.onUpdate({ ...this.state })
-
-    if (this.settings.autoStartBreaks && nextMode !== 'work') {
-      this.start()
-    }
-  }
-
-  private clearInterval() {
-    if (this.intervalId !== null) {
-      window.clearInterval(this.intervalId)
-      this.intervalId = null
-    }
-  }
-
-  private clearTransitionTimeout() {
-    if (this.transitionTimeoutId !== null) {
-      window.clearTimeout(this.transitionTimeoutId)
-      this.transitionTimeoutId = null
-    }
-  }
-
-  start() {
-    if (this.state.state === 'running') return
-    this.clearTransitionTimeout()
-    this.state.state = 'running'
-    this.onUpdate({ ...this.state })
-    this.intervalId = window.setInterval(() => this.tick(), 1000)
-  }
-
-  pause() {
-    if (this.state.state !== 'running') return
-    this.clearInterval()
-    this.state.state = 'paused'
-    this.onUpdate({ ...this.state })
-  }
-
-  resume() {
-    if (this.state.state !== 'paused') return
-    this.state.state = 'running'
-    this.onUpdate({ ...this.state })
-    this.intervalId = window.setInterval(() => this.tick(), 1000)
-  }
-
-  reset() {
-    this.clearInterval()
-    this.clearTransitionTimeout()
-    this.state.state = 'idle'
-    this.state.remainingSeconds = this.state.totalSeconds
-    this.onUpdate({ ...this.state })
-  }
-
-  skip() {
-    this.clearInterval()
-    this.clearTransitionTimeout()
-    this.transitionToNextMode()
-  }
-
-  getState(): TimerState {
-    return { ...this.state }
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/* Page setup                                                         */
-/* ------------------------------------------------------------------ */
+import { Timer } from './timer-engine'
 
 function formatTime(totalSeconds: number): { mm: string; ss: string } {
   const mins = Math.floor(totalSeconds / 60)
@@ -166,7 +23,14 @@ function isDesktop(): boolean {
 }
 
 async function initTimerPage() {
-  const settings = await getSettings()
+  let settings: import('../types').Settings
+  try {
+    settings = await getSettings()
+  } catch (err) {
+    console.error('Failed to load settings:', err)
+    alert('Unable to load timer settings. Please try refreshing the page.')
+    return
+  }
 
   // Render navs
   const sideNavContainer = document.getElementById('side-nav')
@@ -183,10 +47,14 @@ async function initTimerPage() {
   const statsContainer = document.getElementById('stats-row')
   let todayFocusMinutes = 0
   if (statsContainer) {
-    const todaySessions = await getTodaySessions()
-    todayFocusMinutes = todaySessions
-      .filter((s) => s.type === 'work' && s.completed)
-      .reduce((sum, s) => sum + s.duration, 0)
+    try {
+      const todaySessions = await getTodaySessions()
+      todayFocusMinutes = todaySessions
+        .filter((s) => s.type === 'work' && s.completed)
+        .reduce((sum, s) => sum + s.duration, 0)
+    } catch (err) {
+      console.error('Failed to load today sessions:', err)
+    }
 
     statsContainer.appendChild(
       createStatCard({
@@ -196,6 +64,7 @@ async function initTimerPage() {
         label: 'Session Sprout',
         value: 'Ready',
         delay: 0,
+        dataStat: 'session-sprout',
       })
     )
 
@@ -207,6 +76,7 @@ async function initTimerPage() {
         label: 'Hydration',
         value: '100%',
         delay: 100,
+        dataStat: 'hydration',
       })
     )
 
@@ -218,6 +88,7 @@ async function initTimerPage() {
         label: "Today's Focus",
         value: `${Math.floor(todayFocusMinutes / 60)}h ${todayFocusMinutes % 60}m`,
         delay: 200,
+        dataStat: 'today-focus',
       })
     )
 
@@ -229,6 +100,7 @@ async function initTimerPage() {
         label: 'Growth Stage',
         value: 'Seedling',
         delay: 300,
+        dataStat: 'growth-stage',
       })
     )
   }
@@ -267,7 +139,7 @@ async function initTimerPage() {
 
   let timer: Timer | null = null
 
-  function updateDisplay(state: TimerState) {
+  function updateDisplay(state: import('./timer-engine').TimerState) {
     const { mm, ss } = formatTime(state.remainingSeconds)
     if (timeMins) timeMins.textContent = mm
     if (timeSecs) timeSecs.textContent = ss
@@ -295,7 +167,7 @@ async function initTimerPage() {
 
     // Update Session Sprout stat
     if (statsContainer && state.mode === 'work') {
-      const sproutCard = statsContainer.children[0]
+      const sproutCard = statsContainer.querySelector('[data-stat="session-sprout"]')
       if (sproutCard) {
         const valueEl = sproutCard.querySelector('.font-headline.text-xl')
         if (valueEl) {
@@ -313,7 +185,7 @@ async function initTimerPage() {
 
   async function onTimerComplete(mode: string) {
     if (mode === 'work') {
-      const session: Session = {
+      const session = {
         id: crypto.randomUUID(),
         startTime: Date.now() - (timer?.getState().totalSeconds || 0) * 1000,
         endTime: Date.now(),
@@ -322,21 +194,30 @@ async function initTimerPage() {
         plantId: null,
         category: 'focus',
         completed: true,
+      } as import('../types').Session
+
+      try {
+        await createSession(session)
+      } catch (err) {
+        console.error('Failed to save session:', err)
       }
-      await createSession(session)
 
       // Update Today's Focus stat
-      const todaySessions = await getTodaySessions()
-      const updatedFocusMinutes = todaySessions
-        .filter((s) => s.type === 'work' && s.completed)
-        .reduce((sum, s) => sum + s.duration, 0)
-      if (statsContainer) {
-        const focusCard = statsContainer.children[2]
-        if (focusCard) {
-          const valueEl = focusCard.querySelector('.font-headline.text-xl')
-          if (valueEl) {
-            valueEl.textContent = `${Math.floor(updatedFocusMinutes / 60)}h ${updatedFocusMinutes % 60}m`
-          }
+      let updatedFocusMinutes = 0
+      try {
+        const todaySessions = await getTodaySessions()
+        updatedFocusMinutes = todaySessions
+          .filter((s) => s.type === 'work' && s.completed)
+          .reduce((sum, s) => sum + s.duration, 0)
+      } catch (err) {
+        console.error('Failed to refresh today sessions:', err)
+      }
+
+      const focusCard = statsContainer?.querySelector('[data-stat="today-focus"]')
+      if (focusCard) {
+        const valueEl = focusCard.querySelector('.font-headline.text-xl')
+        if (valueEl) {
+          valueEl.textContent = `${Math.floor(updatedFocusMinutes / 60)}h ${updatedFocusMinutes % 60}m`
         }
       }
 
@@ -348,12 +229,16 @@ async function initTimerPage() {
             icon: '/favicon.svg',
           })
         } else if (Notification.permission !== 'denied') {
-          const permission = await Notification.requestPermission()
-          if (permission === 'granted') {
-            new Notification('Sproutdoro', {
-              body: 'Work session complete! Time for a break.',
-              icon: '/favicon.svg',
-            })
+          try {
+            const permission = await Notification.requestPermission()
+            if (permission === 'granted') {
+              new Notification('Sproutdoro', {
+                body: 'Work session complete! Time for a break.',
+                icon: '/favicon.svg',
+              })
+            }
+          } catch (err) {
+            console.error('Notification permission error:', err)
           }
         }
       }
@@ -398,18 +283,6 @@ async function initTimerPage() {
       timer.skip()
     })
   }
-
-  // Handle resize for progress ring
-  window.addEventListener('resize', () => {
-    if (!timer || !timerCircle) return
-    const state = timer.getState()
-    const progress =
-      state.totalSeconds > 0
-        ? 1 - state.remainingSeconds / state.totalSeconds
-        : 0
-    const size = isDesktop() ? 480 : 320
-    updateCircularProgress(timerCircle, progress, { size, strokeWidth: 12 })
-  })
 }
 
 initTimerPage().catch(console.error)

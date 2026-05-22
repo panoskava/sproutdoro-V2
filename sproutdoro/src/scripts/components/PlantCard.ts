@@ -108,7 +108,7 @@ export function createPlantCard(props: PlantCardProps): HTMLElement {
   date.textContent = plantedDate
 
   // Maturity progress bar
-  const maxFocusMinutes = (plant.level as number) * 60
+  const maxFocusMinutes = plant.level * 60
   const maturity = Math.min(1, plant.totalFocusMinutes / maxFocusMinutes)
   const progressWrap = document.createElement('div')
   progressWrap.className =
