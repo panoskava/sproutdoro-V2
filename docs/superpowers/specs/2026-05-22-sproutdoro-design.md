@@ -852,9 +852,86 @@ services:
 
 ---
 
-## 15. Testing Strategy
+## 15. Git Workflow
 
-### 15.1 Unit Tests (Vitest)
+### 15.1 Branch Strategy
+
+**Main branch:** `main` — production-ready code only
+
+**Feature branches:** `feature/<name>` — individual features
+- `feature/project-scaffold`
+- `feature/storage-layer`
+- `feature/timer-page`
+- `feature/settings-page`
+- `feature/insights-page`
+- `feature/garden-page`
+- `feature/audio-system`
+- `feature/pwa-setup`
+- `feature/docker-deployment`
+
+**Workflow:**
+1. Create feature branch from `main`
+2. Implement feature with atomic commits
+3. Push branch to origin
+4. Create PR via `gh pr create`
+5. Review and merge via `gh pr merge`
+6. Delete feature branch
+
+### 15.2 Commit Convention
+
+Follow conventional commits:
+```
+<type>: <description>
+
+[optional body]
+
+[optional footer]
+```
+
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+
+Examples:
+- `feat: add circular progress timer component`
+- `fix: correct timer drift on tab switch`
+- `docs: update README with setup instructions`
+- `chore: add Dockerfile and nginx config`
+
+### 15.3 gh CLI Usage
+
+**Create PR:**
+```bash
+gh pr create --title "feat: add focus timer page" --body "Implements the main Pomodoro timer with circular progress, controls, and session stats. Closes #1" --base main
+```
+
+**Merge PR:**
+```bash
+gh pr merge --squash --delete-branch
+```
+
+**View PR status:**
+```bash
+gh pr status
+```
+
+**List branches:**
+```bash
+gh repo view --branch feature/timer-page
+```
+
+### 15.4 Commit Checklist
+
+Before each commit:
+- [ ] Code works (tested manually)
+- [ ] No console errors
+- [ ] TypeScript compiles without errors
+- [ ] No secrets or API keys committed
+- [ ] Commit message follows convention
+
+---
+
+## 16. Testing Strategy
+
+### 16.1 Unit Tests (Vitest)
 
 - Timer logic: countdown, pause/resume, completion triggers
 - State manager: pub/sub events, state updates
@@ -862,13 +939,13 @@ services:
 - Plant generation: rarity distribution, leveling logic
 - Insights calculation: streaks, aggregates
 
-### 15.2 Integration Tests
+### 16.2 Integration Tests
 
 - Full session lifecycle: start → complete → plant generated → garden updated
 - Settings persistence: change → reload page → verify saved
 - Cross-page navigation: timer state survives navigation (via storage)
 
-### 15.3 Manual Testing Checklist
+### 16.3 Manual Testing Checklist
 
 - [ ] Timer counts down correctly (visually and logically)
 - [ ] Progress ring animates smoothly
@@ -884,9 +961,9 @@ services:
 
 ---
 
-## 16. Asset Requirements
+## 17. Asset Requirements
 
-### 16.1 Plant Images
+### 17.1 Plant Images
 
 Need images for each plant type. Use Unsplash or AI-generated:
 
@@ -903,18 +980,18 @@ Need images for each plant type. Use Unsplash or AI-generated:
 
 **Fallback:** If images fail to load, show colored placeholder with plant icon.
 
-### 16.2 Icons
+### 17.2 Icons
 
 - App icon: 192×192 and 512×512, plant/sprout themed, green/brown
 - Favicon: Small sprout icon
 
-### 16.3 Sounds
+### 17.3 Sounds
 
 As specified in Section 10. Can use royalty-free assets or generate simple tones.
 
 ---
 
-## 17. Performance Considerations
+## 18. Performance Considerations
 
 1. **Image Optimization:** Use WebP format with JPG fallback, lazy-load garden images
 2. **Code Splitting:** Each page gets its own JS chunk (Vite handles this)
@@ -924,7 +1001,7 @@ As specified in Section 10. Can use royalty-free assets or generate simple tones
 
 ---
 
-## 18. Accessibility
+## 19. Accessibility
 
 1. **Contrast:** All text meets WCAG AA (4.5:1 for normal, 3:1 for large)
 2. **Focus States:** Visible focus rings on all interactive elements
@@ -935,7 +1012,7 @@ As specified in Section 10. Can use royalty-free assets or generate simple tones
 
 ---
 
-## 19. Future Enhancements (Post-MVP)
+## 20. Future Enhancements (Post-MVP)
 
 These are NOT in scope for initial implementation but noted for future:
 
@@ -950,7 +1027,7 @@ These are NOT in scope for initial implementation but noted for future:
 
 ---
 
-## 20. Implementation Order
+## 21. Implementation Order
 
 Recommended build order:
 
