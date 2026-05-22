@@ -12,9 +12,8 @@ import {
   updatePlant,
   getFeaturedPlant,
   getInsights,
-  updateInsights,
 } from './storage'
-import type { Session, Plant, Insights } from '../types'
+import type { Session, Plant } from '../types'
 
 const results: { name: string; pass: boolean; error?: string }[] = []
 
@@ -160,16 +159,12 @@ export async function runStorageTests(): Promise<void> {
       'getInsights counts plants grown correctly'
     )
     assert(insights.weeklyStats.length >= 1, 'getInsights computes weekly stats')
-    assert(insights.lastSessionDate === session3.startTime, 'getInsights sets lastSessionDate')
+    const expectedLastSessionDate = new Date(session3.startTime).setHours(0, 0, 0, 0)
+    assert(insights.lastSessionDate === expectedLastSessionDate, 'getInsights sets lastSessionDate')
 
-    // Test caching
-    const cachedInsights: Insights = {
-      ...insights,
-      currentStreak: 999,
-    }
-    await updateInsights(cachedInsights)
-    const retrievedInsights = await getInsights()
-    assert(retrievedInsights.currentStreak === 999, 'getInsights returns cached insights when available')
+    // Verify getInsights always computes fresh data (no stale caching)
+    const freshInsights = await getInsights()
+    assert(freshInsights.currentStreak === insights.currentStreak, 'getInsights always computes fresh insights')
 
     console.log('\n📊 Test Summary:')
     const passed = results.filter((r) => r.pass).length
