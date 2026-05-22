@@ -1,0 +1,113 @@
+<h2>Garden Gamification System</h2>
+<p class="subtitle">How focus sessions turn into living plants</p>
+
+<div class="section">
+  <h3>Plant Lifecycle: Session → Seedling → Mature Plant</h3>
+  <div class="mockup">
+    <div class="mockup-header">Growth Mechanics</div>
+    <div class="mockup-body" style="font-size:0.9rem; line-height:1.5;">
+      <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+        <div style="flex:1; background:#f7f3e9; padding:1rem; border-radius:12px; text-align:center;">
+          <div style="font-size:2rem; margin-bottom:0.5rem;">🌱</div>
+          <strong>1. Complete Focus Session</strong><br>
+          <span style="color:#666; font-size:0.85rem;">25 min (or custom) timer finishes</span>
+        </div>
+        <div style="font-size:1.5rem; color:#516233;">→</div>
+        <div style="flex:1; background:#d6eaaf; padding:1rem; border-radius:12px; text-align:center;">
+          <div style="font-size:2rem; margin-bottom:0.5rem;">🌿</div>
+          <strong>2. New Seedling Appears</strong><br>
+          <span style="color:#666; font-size:0.85rem;">In "My Garden" empty slot</span>
+        </div>
+        <div style="font-size:1.5rem; color:#516233;">→</div>
+        <div style="flex:1; background:#bbce95; padding:1rem; border-radius:12px; text-align:center;">
+          <div style="font-size:2rem; margin-bottom:0.5rem;">🌻</div>
+          <strong>3. Plant Matures</strong><br>
+          <span style="color:#666; font-size:0.85rem;">Level 1 → 5 based on total focus time</span>
+        </div>
+      </div>
+      
+      <div style="background:#fff9f0; padding:1rem; border-radius:8px; border-left:4px solid #934a29;">
+        <strong>Key Rule:</strong> Each completed session plants ONE new seedling. The <em>type</em> of plant is random from your unlocked collection. The <em>maturity level</em> (1-5) is based on cumulative focus hours with that plant.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Plant Types & Rarity System</h3>
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+    <div class="card" style="padding:1rem;">
+      <h4>Common (70% chance)</h4>
+      <ul style="margin:0; padding-left:1.2rem;">
+        <li>Fern Leaf</li>
+        <li>Basil Sprig</li>
+        <li>Grass Tuft</li>
+        <li>Clover</li>
+      </ul>
+    </div>
+    <div class="card" style="padding:1rem;">
+      <h4>Uncommon (20% chance)</h4>
+      <ul style="margin:0; padding-left:1.2rem;">
+        <li>Succulent Rosette</li>
+        <li>Lavender Bunch</li>
+        <li>Monstera Leaf</li>
+      </ul>
+    </div>
+    <div class="card" style="padding:1rem;">
+      <h4>Rare (8% chance)</h4>
+      <ul style="margin:0; padding-left:1.2rem;">
+        <li>Bonsai Tree</li>
+        <li>Orchid Bloom</li>
+        <li>Carnivorous Plant</li>
+      </ul>
+    </div>
+    <div class="card" style="padding:1rem;">
+      <h4>Legendary (2% chance)</h4>
+      <ul style="margin:0; padding-left:1.2rem;">
+        <li>Golden Sunflower</li>
+        <li>Crystal Rose</li>
+        <li>Ancient Oak</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Data Model</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-family:monospace; font-size:0.8rem; background:#1c1c16; color:#faffe8; padding:1rem; border-radius:8px;">
+<strong>Plant</strong> {<br>
+&nbsp;&nbsp;id: string,<br>
+&nbsp;&nbsp;type: "fern" | "lavender" | "monstera" | ...,<br>
+&nbsp;&nbsp;rarity: "common" | "uncommon" | "rare" | "legendary",<br>
+&nbsp;&nbsp;level: 1 | 2 | 3 | 4 | 5,<br>
+&nbsp;&nbsp;plantedAt: Date,<br>
+&nbsp;&nbsp;totalFocusMinutes: number,<br>
+&nbsp;&nbsp;sessionIds: string[],<br>
+&nbsp;&nbsp;isMasterpiece: boolean<br>
+}<br><br>
+<strong>GardenState</strong> {<br>
+&nbsp;&nbsp;plants: Plant[],<br>
+&nbsp;&nbsp;totalPlants: number,<br>
+&nbsp;&nbsp;totalFocusHours: number,<br>
+&nbsp;&nbsp;unlockedTypes: string[],<br>
+&nbsp;&nbsp;featuredPlantId: string | null<br>
+}
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Mastery Progression</h3>
+  <p>Each plant levels up based on cumulative focus time contributed to it:</p>
+  <ul>
+    <li><strong>Level 1 (Sprout):</strong> 0-60 min — tiny seedling</li>
+    <li><strong>Level 2 (Growing):</strong> 60-180 min — small plant</li>
+    <li><strong>Level 3 (Thriving):</strong> 180-300 min — medium plant</li>
+    <li><strong>Level 4 (Mature):</strong> 300-480 min — full size</li>
+    <li><strong>Level 5 (Blooming):</strong> 480+ min — flowering/glowing</li>
+  </ul>
+  <p style="margin-top:0.5rem; color:#666; font-size:0.9rem;">The "Masterpiece" tag goes to the plant with the highest total focus time.</p>
+</div>
+
+<p class="subtitle" style="margin-top:2rem">Does this gamification system capture what you envisioned? Any changes to plant types, rarity rates, or leveling?</p>

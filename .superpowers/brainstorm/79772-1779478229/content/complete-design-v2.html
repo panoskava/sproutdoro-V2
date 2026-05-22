@@ -1,0 +1,200 @@
+<h2>🎨 Sproutdoro — Complete App Design</h2>
+<p class="subtitle">All 4 screens, data flow, gamification, and PWA — presented section by section for your approval</p>
+
+<div class="section">
+  <h3>📱 Screen 1: Focus Timer (index.html)</h3>
+  <div class="mockup">
+    <div class="mockup-header">The Main Timer Experience</div>
+    <div class="mockup-body">
+      <div style="display:flex; gap:2rem; align-items:start;">
+        <div style="flex:1;">
+          <h4>Layout Structure</h4>
+          <ul>
+            <li><strong>SideNav</strong> (desktop): Glass-sage sidebar with user profile, nav links (Focus active), "Start Session" button</li>
+            <li><strong>MobileNav</strong> (mobile): Glass-sage bottom bar with FAB center</li>
+            <li><strong>Header:</strong> "Current Season: Spring Morning" (left), "Session Goal: Deep Focus (25m)" (right)</li>
+            <li><strong>Center Stage:</strong> 
+              <ul>
+                <li>Large circular SVG timer (320px mobile, 480px desktop)</li>
+                <li>Outer glass ring with glow</li>
+                <li>Progress track: primary stroke with round linecap</li>
+                <li>"Sun" dot (secondary_fixed) moving along track</li>
+                <li>Center: sprout image with soft radial mask + time display overlay</li>
+              </ul>
+            </li>
+            <li><strong>Controls:</strong> Reset, Pause/Play (gradient button), Skip</li>
+            <li><strong>Stats Row:</strong> 4 stat cards (Session Sprout, Hydration, Today's Focus, Growth Stage)</li>
+          </ul>
+        </div>
+        <div style="flex:1; background:#f7f3e9; padding:1rem; border-radius:12px;">
+          <h4>Timer States</h4>
+          <ul style="font-size:0.9rem;">
+            <li><strong>Idle:</strong> Timer at full duration, "Start" button</li>
+            <li><strong>Running:</strong> Counting down, progress ring fills, "Pause" button</li>
+            <li><strong>Paused:</strong> Frozen time, "Resume" button</li>
+            <li><strong>Complete:</strong> 00:00, celebration animation, new seedling popup</li>
+            <li><strong>Break:</strong> Short/Long break timer runs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>⚙️ Screen 2: Settings (settings.html)</h3>
+  <div class="mockup">
+    <div class="mockup-header">Configure Your Greenhouse</div>
+    <div class="mockup-body">
+      <div style="display:flex; gap:2rem;">
+        <div style="flex:1;">
+          <h4>Bento Grid Layout</h4>
+          <ul>
+            <li><strong>Timer Durations Card (span 8):</strong>
+              <ul>
+                <li>Work Session slider (1-60 min) → shows "25:00"</li>
+                <li>Short Break slider (1-15 min) → shows "05:00"</li>
+                <li>Long Break slider (5-45 min) → shows "15:00"</li>
+              </ul>
+            </li>
+            <li><strong>Appearance Card (span 4):</strong>
+              <ul>
+                <li>Light/Dark toggle (pill button group)</li>
+                <li>Soft description text</li>
+              </ul>
+            </li>
+            <li><strong>Ambience & Alerts Card (span 12):</strong>
+              <ul>
+                <li>3 sound options: Soft Wind Chimes, Birdsong Morning, Rain on Leaves</li>
+                <li>Each has icon, name, description, radio-style selection</li>
+                <li>Volume slider (global)</li>
+              </ul>
+            </li>
+            <li><strong>Toggles (span 12):</strong>
+              <ul>
+                <li>Auto-start Breaks (ON/OFF)</li>
+                <li>Browser Notifications (ON/OFF)</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <div style="flex:1; background:#f7f3e9; padding:1rem; border-radius:12px;">
+          <h4>Footer Actions</h4>
+          <ul style="font-size:0.9rem;">
+            <li>"Reset Defaults" button (text link)</li>
+            <li>"Save Changes" button (primary gradient)</li>
+            <li>Version text: "Sproutdoro v2.4.0 — Made with care"</li>
+          </ul>
+          <p style="margin-top:1rem; font-size:0.85rem; color:#666;">Settings auto-save to IndexedDB immediately on change — no manual save needed for sliders, but Save button provides confirmation.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>📊 Screen 3: Focus Insights (insights.html)</h3>
+  <div class="mockup">
+    <div class="mockup-header">Your Productivity, Blossoming</div>
+    <div class="mockup-body">
+      <div style="display:flex; gap:2rem;">
+        <div style="flex:1;">
+          <h4>Bento Grid</h4>
+          <ul>
+            <li><strong>Daily Streak Card (span 4):</strong> Large number (14), "Days" label, fire icon background, encouragement text</li>
+            <li><strong>Plants Grown Bar Chart (span 8):</strong> Weekly bar chart (Mon-Sun), plants per day, hover tooltips, Week/Month toggle</li>
+            <li><strong>Focus Distribution Pie Chart (span 7):</strong> SVG donut chart, Deep Work/Reading/Planning breakdown, color-coded legend</li>
+            <li><strong>Total Focus Hours (span 5):</strong> Large number (124), "Hours" label, monthly goal progress bar (82%)</li>
+            <li><strong>Achievements Section (span 12):</strong> Badges (Oak of Focus, Morning Lavender, etc.), earned vs locked, plant image grid</li>
+          </ul>
+        </div>
+        <div style="flex:1; background:#f7f3e9; padding:1rem; border-radius:12px;">
+          <h4>Data Sources</h4>
+          <ul style="font-size:0.9rem;">
+            <li>Daily streak: consecutive days with ≥1 completed session</li>
+            <li>Bar chart: plants grown per day from session data</li>
+            <li>Pie chart: session categories (user can tag sessions)</li>
+            <li>Total hours: sum of all completed work session durations</li>
+            <li>Goal: user-defined monthly target (default: 40h)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>🌱 Screen 4: My Garden (garden.html)</h3>
+  <div class="mockup">
+    <div class="mockup-header">Your Cultivated Sanctuary</div>
+    <div class="mockup-body">
+      <div style="display:flex; gap:2rem;">
+        <div style="flex:1;">
+          <h4>Layout</h4>
+          <ul>
+            <li><strong>Header:</strong> "My Garden" title, description, stats (Total Plants: 24, Focus Hours: 158)</li>
+            <li><strong>Featured Plant (span 2):</strong> Large card with full plant image, "Masterpiece" badge, name, story, date, Details button</li>
+            <li><strong>Plant Grid:</strong> Masonry-style grid of plant cards
+              <ul>
+                <li>Plant image (aspect-square, rounded)</li>
+                <li>Rarity badge (bottom-right: Common/Rare/Legendary)</li>
+                <li>Plant name + date grown</li>
+                <li>Maturity progress bar (color-coded by level)</li>
+                <li>Level indicator: "Level 3 Maturity"</li>
+              </ul>
+            </li>
+            <li><strong>Empty Slot CTA:</strong> Dashed border card, "+" icon, "New Seedling" text</li>
+          </ul>
+        </div>
+        <div style="flex:1; background:#f7f3e9; padding:1rem; border-radius:12px;">
+          <h4>Gamification Details</h4>
+          <ul style="font-size:0.9rem;">
+            <li>Each completed session = 1 new seedling</li>
+            <li>Plant type randomly selected from unlocked pool</li>
+            <li>Rarity: Common 70%, Uncommon 20%, Rare 8%, Legendary 2%</li>
+            <li>Levels 1-5 based on cumulative focus time with that plant</li>
+            <li>Masterpiece = plant with highest total focus time</li>
+            <li>FAB: "New Sprout" button (quick-start session)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>💾 Data Architecture</h3>
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+    <div class="card" style="padding:1rem;">
+      <h4>IndexedDB Stores</h4>
+      <ul style="font-size:0.85rem; margin:0; padding-left:1.2rem;">
+        <li><strong>settings</strong>: timer durations, theme, sound, volume, toggles</li>
+        <li><strong>sessions</strong>: start/end time, duration, type, plantId, category</li>
+        <li><strong>plants</strong>: id, type, rarity, level, plantedAt, totalFocusMinutes</li>
+        <li><strong>insights</strong>: streak data, daily/weekly stats, achievements</li>
+      </ul>
+    </div>
+    <div class="card" style="padding:1rem;">
+      <h4>Default Settings</h4>
+      <ul style="font-size:0.85rem; margin:0; padding-left:1.2rem;">
+        <li>Work: 25 min | Short: 5 min | Long: 15 min</li>
+        <li>Theme: Light | Sound: Wind Chimes</li>
+        <li>Volume: 50% | Auto-start: ON</li>
+        <li>Notifications: ON</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>🚀 PWA & Deployment</h3>
+  <ul>
+    <li><strong>Manifest:</strong> App icons, theme colors, display: standalone</li>
+    <li><strong>Service Worker:</strong> Precaches all pages + assets, offline functionality</li>
+    <li><strong>Icons:</strong> 192x192 and 512x512 plant-themed icons</li>
+    <li><strong>Docker:</strong> Multi-stage build → nginx:alpine (~25MB)</li>
+    <li><strong>Hosting:</strong> Any static host or Docker container</li>
+  </ul>
+</div>
+
+<p class="subtitle" style="margin-top:2rem"><strong>Please review each section above.</strong> Does this design capture everything you want? Any changes, additions, or removals before I write the formal spec and implementation plan?</p>

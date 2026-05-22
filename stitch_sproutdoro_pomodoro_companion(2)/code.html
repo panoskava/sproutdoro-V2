@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sproutdoro Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#ece8de",
+                        "outline-variant": "#c6c8ba",
+                        "outline": "#76786c",
+                        "primary-fixed-dim": "#bbce95",
+                        "surface-container-highest": "#e6e2d8",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#284870",
+                        "secondary-container": "#fd9e77",
+                        "on-primary-fixed": "#131f00",
+                        "surface-tint": "#546435",
+                        "primary": "#516233",
+                        "surface-dim": "#dddad0",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-container": "#fefcff",
+                        "on-surface": "#1c1c16",
+                        "primary-container": "#697b49",
+                        "error": "#ba1a1a",
+                        "tertiary-container": "#5876a1",
+                        "tertiary-fixed-dim": "#aac8f8",
+                        "on-secondary-container": "#763315",
+                        "secondary-fixed-dim": "#ffb598",
+                        "on-secondary-fixed-variant": "#763314",
+                        "on-tertiary-fixed": "#001c3a",
+                        "on-primary-container": "#faffe8",
+                        "surface-container": "#f1eee4",
+                        "secondary": "#934a29",
+                        "surface": "#fdf9ef",
+                        "primary-fixed": "#d6eaaf",
+                        "tertiary-fixed": "#d4e3ff",
+                        "error-container": "#ffdad6",
+                        "on-background": "#1c1c16",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f7f3e9",
+                        "background": "#fdf9ef",
+                        "inverse-on-surface": "#f4f0e7",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#3f5d87",
+                        "inverse-surface": "#31312a",
+                        "inverse-primary": "#bbce95",
+                        "on-secondary-fixed": "#370e00",
+                        "on-surface-variant": "#45483d",
+                        "on-primary-fixed-variant": "#3c4c20",
+                        "surface-bright": "#fdf9ef",
+                        "surface-variant": "#e6e2d8",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#ffdbce"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Be Vietnam Pro"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Be Vietnam Pro', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            background: #e6e2d8;
+            height: 0.5rem;
+            border-radius: 9999px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 1.25rem;
+            width: 1.25rem;
+            background: #516233;
+            border-radius: 50%;
+            margin-top: -0.375rem;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex">
+<!-- SideNavBar (The Anchor) -->
+<aside class="hidden md:flex h-screen w-64 rounded-r-xl sticky left-0 top-0 bg-surface-container-low dark:bg-[#1c1c16] flex-col gap-8 py-10 px-4 shadow-[0px_12px_32px_rgba(147,74,41,0.08)]">
+<div class="px-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">potted_plant</span>
+<div>
+<h1 class="text-xl font-extrabold text-primary tracking-tight">Sproutdoro</h1>
+<p class="text-[10px] text-primary/60 uppercase tracking-widest font-headline">Keep growing</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2 mt-4">
+<a class="flex items-center gap-3 text-primary/50 dark:text-[#829460]/50 px-6 py-3 hover:bg-surface-container-highest/50 rounded-full transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">timer</span>
+<span class="font-headline text-sm font-medium tracking-[0.05rem] uppercase">Focus</span>
+</a>
+<a class="flex items-center gap-3 text-primary/50 dark:text-[#829460]/50 px-6 py-3 hover:bg-surface-container-highest/50 rounded-full transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">potted_plant</span>
+<span class="font-headline text-sm font-medium tracking-[0.05rem] uppercase">Garden</span>
+</a>
+<a class="flex items-center gap-3 text-primary/50 dark:text-[#829460]/50 px-6 py-3 hover:bg-surface-container-highest/50 rounded-full transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">bar_chart</span>
+<span class="font-headline text-sm font-medium tracking-[0.05rem] uppercase">Insights</span>
+</a>
+<a class="flex items-center gap-3 bg-surface-container-highest dark:bg-[#2a2a24] text-primary dark:text-[#829460] rounded-full px-6 py-3" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-headline text-sm font-medium tracking-[0.05rem] uppercase">Config</span>
+</a>
+</nav>
+<div class="mt-auto px-4">
+<div class="bg-primary/5 p-4 rounded-lg flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-primary-fixed">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="close-up portrait of a friendly person smiling with a soft natural background and warm cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKuZFE3HWHkz354lRbJPTFJX18MxI8TiS8AHKk3UEFQPOFSJITR-Sc7N0oopAF9NLruyiIPSIson7-SeMYgY0SWlYTwAeGuSYrn1OVEZXvu--JrKUCpY8dV_i3guf0e3Po8dkGZx-Xc0hP7w0YpPCpCYnRhde_3UIUrG8UEUxFV12xc9JWVikiQLFZlQc7Xt4bbrSEpAj577Qqrx7bLWMKgRLv0wSwfDVqxHSCg8tOYDlY7Gil5LBz0M1LQObkyLlixePoBrFvAm2t"/>
+</div>
+<div class="overflow-hidden">
+<p class="text-xs font-bold text-on-surface truncate">Alex's Garden</p>
+<p class="text-[10px] text-on-surface-variant">Lvl 14 Sprout Master</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 min-h-screen px-6 py-12 md:px-16 md:py-20 max-w-5xl mx-auto">
+<header class="mb-12">
+<div class="flex items-center gap-4 mb-2">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">settings</span>
+<h2 class="text-3xl font-extrabold text-on-surface tracking-tight font-headline">Settings</h2>
+</div>
+<p class="text-on-surface-variant max-w-md">Tailor your greenhouse environment for maximum focus and growth.</p>
+</header>
+<!-- Bento Layout for Settings -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+<!-- Timer Durations Card -->
+<section class="md:col-span-8 bg-surface-container-low p-8 rounded-lg">
+<div class="flex items-center gap-3 mb-8">
+<span class="material-symbols-outlined text-primary">schedule</span>
+<h3 class="text-xl font-bold font-headline">Timer Durations</h3>
+</div>
+<div class="space-y-10">
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<label class="text-sm font-bold uppercase tracking-widest font-headline text-on-surface-variant">Work Session</label>
+<span class="text-2xl font-bold font-headline text-primary">25:00</span>
+</div>
+<input class="w-full h-2 rounded-full accent-primary" max="60" min="1" type="range" value="25"/>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<label class="text-sm font-bold uppercase tracking-widest font-headline text-on-surface-variant">Short Break</label>
+<span class="text-2xl font-bold font-headline text-secondary">05:00</span>
+</div>
+<input class="w-full h-2 rounded-full accent-secondary" max="15" min="1" type="range" value="5"/>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<label class="text-sm font-bold uppercase tracking-widest font-headline text-on-surface-variant">Long Break</label>
+<span class="text-2xl font-bold font-headline text-tertiary">15:00</span>
+</div>
+<input class="w-full h-2 rounded-full accent-tertiary" max="45" min="5" type="range" value="15"/>
+</div>
+</div>
+</section>
+<!-- Theme Toggle Card -->
+<section class="md:col-span-4 bg-surface-container-highest p-8 rounded-lg flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-secondary">palette</span>
+<h3 class="text-xl font-bold font-headline">Appearance</h3>
+</div>
+<p class="text-sm text-on-surface-variant mb-8 leading-relaxed">Choose an environment that matches your current sunlight levels.</p>
+</div>
+<div class="bg-surface-container-lowest p-2 rounded-full flex gap-1">
+<button class="flex-1 py-3 px-4 rounded-full bg-primary text-on-primary flex items-center justify-center gap-2 transition-all">
+<span class="material-symbols-outlined text-sm">light_mode</span>
+<span class="text-xs font-bold uppercase tracking-wider font-headline">Light</span>
+</button>
+<button class="flex-1 py-3 px-4 rounded-full text-on-surface-variant flex items-center justify-center gap-2 hover:bg-surface-variant transition-all">
+<span class="material-symbols-outlined text-sm">dark_mode</span>
+<span class="text-xs font-bold uppercase tracking-wider font-headline">Dark</span>
+</button>
+</div>
+</section>
+<!-- Notification Sounds Card -->
+<section class="md:col-span-12 bg-surface-container-low p-8 rounded-lg">
+<div class="flex items-center gap-3 mb-8">
+<span class="material-symbols-outlined text-primary">volume_up</span>
+<h3 class="text-xl font-bold font-headline">Ambience &amp; Alerts</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Sound Options -->
+<div class="bg-surface-container-lowest p-6 rounded-lg group cursor-pointer hover:bg-primary-fixed transition-colors">
+<div class="flex items-center justify-between mb-4">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">air</span>
+<div class="w-5 h-5 rounded-full border-2 border-primary flex items-center justify-center">
+<div class="w-2.5 h-2.5 bg-primary rounded-full"></div>
+</div>
+</div>
+<p class="font-bold font-headline">Soft Wind Chimes</p>
+<p class="text-xs text-on-surface-variant mt-1">A gentle reminder of peace</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg group cursor-pointer hover:bg-secondary-fixed transition-colors">
+<div class="flex items-center justify-between mb-4">
+<span class="material-symbols-outlined text-secondary">eco</span>
+<div class="w-5 h-5 rounded-full border-2 border-outline-variant"></div>
+</div>
+<p class="font-bold font-headline">Birdsong Morning</p>
+<p class="text-xs text-on-surface-variant mt-1">Nature's natural wake-up</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg group cursor-pointer hover:bg-tertiary-fixed transition-colors">
+<div class="flex items-center justify-between mb-4">
+<span class="material-symbols-outlined text-tertiary">water_drop</span>
+<div class="w-5 h-5 rounded-full border-2 border-outline-variant"></div>
+</div>
+<p class="font-bold font-headline">Rain on Leaves</p>
+<p class="text-xs text-on-surface-variant mt-1">Deep focus in the mist</p>
+</div>
+</div>
+<div class="mt-8 flex items-center gap-6 bg-surface-container p-4 rounded-full">
+<span class="material-symbols-outlined text-on-surface-variant">volume_down</span>
+<input class="flex-1 accent-primary" type="range"/>
+<span class="material-symbols-outlined text-on-surface-variant">volume_up</span>
+</div>
+</section>
+<!-- Extra Toggles -->
+<section class="md:col-span-12 space-y-4">
+<div class="flex items-center justify-between bg-surface-container-low p-6 rounded-lg">
+<div class="flex gap-4 items-center">
+<span class="p-3 bg-primary/10 rounded-full text-primary material-symbols-outlined">auto_mode</span>
+<div>
+<p class="font-bold font-headline">Auto-start Breaks</p>
+<p class="text-sm text-on-surface-variant">Don't wait, keep the cycle growing.</p>
+</div>
+</div>
+<button class="w-14 h-8 bg-primary rounded-full relative transition-colors">
+<div class="absolute right-1 top-1 w-6 h-6 bg-white rounded-full shadow-sm"></div>
+</button>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low p-6 rounded-lg">
+<div class="flex gap-4 items-center">
+<span class="p-3 bg-secondary/10 rounded-full text-secondary material-symbols-outlined">notifications_active</span>
+<div>
+<p class="font-bold font-headline">Browser Notifications</p>
+<p class="text-sm text-on-surface-variant">Alerts when your sprout is ready.</p>
+</div>
+</div>
+<button class="w-14 h-8 bg-outline-variant/30 rounded-full relative transition-colors">
+<div class="absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-sm"></div>
+</button>
+</div>
+</section>
+</div>
+<footer class="mt-16 flex flex-col md:flex-row gap-4 items-center justify-between pt-8 border-t border-outline-variant/10">
+<p class="text-xs text-on-surface-variant uppercase tracking-widest font-headline">Sproutdoro v2.4.0 — Made with care</p>
+<div class="flex gap-6">
+<button class="text-sm font-bold text-primary hover:underline underline-offset-4">Reset Defaults</button>
+<button class="bg-primary text-on-primary px-8 py-3 rounded-full font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-transform">Save Changes</button>
+</div>
+</footer>
+</main>
+<!-- Mobile Navigation (Pivot) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-highest flex justify-around items-center py-4 px-6 z-50 rounded-t-lg">
+<button class="flex flex-col items-center gap-1 text-primary/50">
+<span class="material-symbols-outlined">timer</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Focus</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary/50">
+<span class="material-symbols-outlined">potted_plant</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Garden</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Config</span>
+</button>
+</nav>
+</body></html>

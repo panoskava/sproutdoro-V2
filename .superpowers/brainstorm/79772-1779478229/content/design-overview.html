@@ -1,0 +1,64 @@
+<h2>Sproutdoro — Design Overview</h2>
+<p class="subtitle">Complete app design covering all 4 screens with TypeScript + Vite + PWA</p>
+
+<div class="section">
+  <h3>App Architecture</h3>
+  <div class="mockup">
+    <div class="mockup-header">Single-Page App (SPA) with Hash Routing</div>
+    <div class="mockup-body" style="font-family:monospace; font-size:0.85rem; line-height:1.6;">
+      <div style="display:flex; gap:1rem;">
+        <div style="flex:1; background:#f5f5f5; padding:1rem; border-radius:8px;">
+          <strong>Entry</strong><br>
+          main.ts → App.ts (router + state manager)
+        </div>
+      </div>
+      <div style="display:flex; gap:1rem; margin-top:0.5rem;">
+        <div style="flex:1; background:#e8f5e9; padding:1rem; border-radius:8px;">
+          <strong>Views/Screens</strong><br>
+          • FocusTimerView.ts<br>
+          • SettingsView.ts<br>
+          • InsightsView.ts<br>
+          • GardenView.ts
+        </div>
+        <div style="flex:1; background:#e3f2fd; padding:1rem; border-radius:8px;">
+          <strong>Shared Components</strong><br>
+          • SideNav.ts<br>
+          • MobileNav.ts<br>
+          • CircularProgress.ts<br>
+          • StatCard.ts<br>
+          • PlantCard.ts
+        </div>
+      </div>
+      <div style="display:flex; gap:1rem; margin-top:0.5rem;">
+        <div style="flex:1; background:#fff3e0; padding:1rem; border-radius:8px;">
+          <strong>Core Modules</strong><br>
+          • Timer.ts (countdown logic)<br>
+          • StateManager.ts (pub/sub state)<br>
+          • Storage.ts (IndexedDB wrapper)<br>
+          • Router.ts (hash-based SPA)<br>
+          • AudioManager.ts (sounds/ambience)
+        </div>
+        <div style="flex:1; background:#fce4ec; padding:1rem; border-radius:8px;">
+          <strong>Data Layer</strong><br>
+          • SettingsStore<br>
+          • SessionStore<br>
+          • GardenStore<br>
+          • InsightsStore
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Key Design Decisions</h3>
+  <ul>
+    <li><strong>Hash routing</strong> (#focus, #settings, #insights, #garden) — no server config needed, works with static file hosting</li>
+    <li><strong>Centralized StateManager</strong> — pub/sub pattern so any component can react to timer changes, settings updates, etc.</li>
+    <li><strong>IndexedDB via idb package</strong> — persists sessions, plants, settings locally on device</li>
+    <li><strong>Vite PWA Plugin</strong> — auto-generates service worker for offline use, installable on mobile</li>
+    <li><strong>CSS-first animations</strong> — organic, bouncy feel matching design system (Cubic Bezier 0.34, 1.56, 0.64, 1)</li>
+  </ul>
+</div>
+
+<p class="subtitle" style="margin-top:2rem">Does this overall architecture look right? Should I proceed to the detailed screen designs?</p>

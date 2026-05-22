@@ -1,0 +1,68 @@
+<h2>Recommended Technology Stack</h2>
+<p class="subtitle">Lightweight, PWA-ready, Docker-friendly</p>
+
+<div class="options">
+  <div class="option" data-choice="vite-vanilla" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3><strong>Vite + Vanilla JS/TS</strong></h3>
+      <p><strong>My recommendation.</strong> Modern dev experience (modules, hot reload) but compiles to zero-overhead static files. No framework runtime — just pure JS.</p>
+      <ul>
+        <li>✅ Ultra-lightweight output</li>
+        <li>✅ PWA via Vite PWA plugin (auto-generates service worker + manifest)</li>
+        <li>✅ IndexedDB (via <code>idb</code> package) for local data storage</li>
+        <li>✅ Docker: serve static files with nginx (single <code>nginx:alpine</code> image)</li>
+        <li>✅ All your existing HTML/Tailwind mockups work as-is</li>
+      </ul>
+    </div>
+  </div>
+  <div class="option" data-choice="svelte" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3><strong>Svelte + Vite</strong></h3>
+      <p>A compiler-based framework that produces tiny, efficient JS. Great for reactive UI but adds a small build step.</p>
+      <ul>
+        <li>✅ Very small bundle size (smaller than React/Vue)</li>
+        <li>✅ Built-in reactive state management</li>
+        <li>❌ Slightly more complex than vanilla</li>
+        <li>⚠️ Would require converting your HTML mockups to .svelte components</li>
+      </ul>
+    </div>
+  </div>
+  <div class="option" data-choice="plain-html" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3><strong>Plain HTML/CSS/JS (No Build Tool)</strong></h3>
+      <p>Your mockups are already in this format. Zero tooling, but manual module management.</p>
+      <ul>
+        <li>✅ No build step at all</li>
+        <li>✅ Works exactly like your mockups</li>
+        <li>❌ Harder to manage multiple screens/components</li>
+        <li>❌ Manual PWA setup (service worker, caching)</li>
+        <li>❌ No hot reload during development</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>Why I recommend Option A</h4>
+    <ul>
+      <li>Your mockups already use Tailwind CDN — Vite can bundle Tailwind properly</li>
+      <li>PWA plugin auto-generates service worker, icons, manifest</li>
+      <li>IndexedDB wrapper makes storing sessions/insights trivial</li>
+      <li>Single <code>Dockerfile</code> with nginx:alpine — ~25MB image</li>
+      <li>You can write vanilla JS but get module imports, TypeScript if desired</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Trade-offs</h4>
+    <ul>
+      <li>Small build step (but Vite is very fast)</li>
+      <li>Need to convert from CDN Tailwind to <code>npm install tailwindcss</code></li>
+    </ul>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:2rem">Click your preferred option above and let me know what you think!</p>

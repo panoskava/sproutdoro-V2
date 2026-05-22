@@ -1,0 +1,155 @@
+<h2>Sproutdoro — Complete Design</h2>
+<p class="subtitle">All screens, data flow, and PWA architecture</p>
+
+<div class="section">
+  <h3>📋 Summary of Decisions So Far</h3>
+  <ul>
+    <li><strong>Tech:</strong> Vite + TypeScript, multi-page HTML, Tailwind CSS, IndexedDB</li>
+    <li><strong>Hosting:</strong> Docker with nginx:alpine (~25MB image)</li>
+    <li><li><strong>App Type:</strong> Multi-page PWA (4 separate HTML files)</li>
+    <li><strong>Garden:</strong> Session-completion → random seedling → level-up with focus time</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>🗂️ Page Breakdown</h3>
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+    <div class="card" style="padding:1rem;">
+      <h4>1. index.html — Focus Timer</h4>
+      <ul style="margin:0; padding-left:1.2rem; font-size:0.9rem;">
+        <li>Circular SVG progress ring (primary stroke)</li>
+        <li>"Sun" dot moving along track (secondary_fixed)</li>
+        <li>Center: sprout image + time display</li>
+        <li>Controls: Pause/Play, Reset, Skip</li>
+        <li>Session stats below: plant type, hydration, focus hours, growth stage</li>
+        <li>SideNav + MobileNav with "Focus" active</li>
+      </ul>
+    </div>
+    <div class="card" style="padding:1rem;">
+      <h4>2. settings.html — Config</h4>
+      <ul style="margin:0; padding-left:1.2rem; font-size:0.9rem;">
+        <li>Bento grid layout</li>
+        <li>Timer sliders: Work (1-60min), Short Break (1-15), Long Break (5-45)</li>
+        <li>Theme toggle: Light/Dark</li>
+        <li>Sound picker: Wind Chimes, Birdsong, Rain</li>
+        <li>Volume slider</li>
+        <li>Toggles: Auto-start breaks, Browser notifications</li>
+        <li>Save / Reset buttons</li>
+      </ul>
+    </div>
+    <div class="card" style="padding:1rem;">
+      <h4>3. insights.html — Focus Insights</h4>
+      <ul style="margin:0; padding-left:1.2rem; font-size:0.9rem;">
+        <li>Daily streak card (large number, fire icon)</li>
+        <li>Bar chart: Plants grown per day this week</li>
+        <li>Pie chart: Focus distribution by category</li>
+        <li>Total focus hours + monthly goal progress</li>
+        <li>Achievement badges + plant showcase</li>
+      </ul>
+    </div>
+    <div class="card" style="padding:1rem;">
+      <h4>4. garden.html — My Garden</h4>
+      <ul style="margin:0; padding-left:1.2rem; font-size:0.9rem;">
+        <li>Featured plant (largest card with image)</li>
+        <li>Grid of all plants with images, names, dates</li>
+        <li>Progress bars showing maturity level</li>
+        <li>Rarity badges (Common, Rare, Legendary)</li>
+        <li>Empty slot CTA: "Start a session to plant"</li>
+        <li>Stats: Total plants, total focus hours</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>⚙️ Shared Components (TypeScript)</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-family:monospace; font-size:0.8rem; background:#1c1c16; color:#faffe8; padding:1rem; border-radius:8px;">
+<strong>SideNav.ts</strong> — Desktop nav, highlights active page<br>
+<strong>MobileNav.ts</strong> — Bottom nav (mobile only)<br>
+<strong>CircularProgress.ts</strong> — SVG timer ring with animated stroke-dashoffset<br>
+<strong>StatCard.ts</strong> — Glass-morphism stat cards (icon + label + value)<br>
+<strong>PlantCard.ts</strong> — Garden grid card (image, name, date, level bar)<br>
+<strong>RangeSlider.ts</strong> — Styled range input for settings<br>
+<strong>ToggleSwitch.ts</strong> — Custom toggle button<br>
+<strong>SoundCard.ts</strong> — Selectable sound option card
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>🔄 Timer Logic & State Flow</h3>
+  <div class="mockup">
+    <div class="mockup-header">Session Lifecycle</div>
+    <div class="mockup-body" style="font-size:0.9rem; line-height:1.5;">
+      <ol>
+        <li><strong>User clicks "Start Session"</strong> → Timer begins countdown from Settings.workDuration</li>
+        <li><strong>Timer ticks every second</strong> → Updates SVG progress ring, time display</li>
+        <li><strong>User pauses</strong> → Timer stops, "Resume" button shown</li>
+        <li><strong>Timer reaches 00:00</strong> → 
+          <ul>
+            <li>Play completion sound</li>
+            <li>Save session to IndexedDB</li>
+            <li>Generate new seedling (random type)</li>
+            <li>Show completion modal/animation</li>
+            <li>Auto-start break if setting enabled</li>
+          </ul>
+        </li>
+        <li><strong>Break timer runs</strong> → Same mechanics, shorter duration</li>
+        <li><strong>After 4 work sessions</strong> → Long break instead of short</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>💾 Data Storage (IndexedDB)</h3>
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+    <div class="card" style="padding:1rem;">
+      <h4>Stores</h4>
+      <ul style="margin:0; padding-left:1.2rem; font-size:0.9rem;">
+        <li><strong>settings:</strong> workDuration, breakDuration, longBreakDuration, theme, sound, volume, autoStart, notifications</li>
+        <li><strong>sessions:</strong> id, startTime, endTime, duration, type (work/break), plantId</li>
+        <li><strong>plants:</strong> id, type, rarity, level, plantedAt, totalFocusMinutes, sessionIds, isMasterpiece</li>
+        <li><strong>insights:</strong> dailyStats, weeklyStats, achievements, streakData</li>
+      </ul>
+    </div>
+    <div class="card" style="padding:1rem;">
+      <h4>Default Settings</h4>
+      <ul style="margin:0; padding-left:1.2rem; font-size:0.9rem;">
+        <li>Work: 25 min</li>
+        <li>Short break: 5 min</li>
+        <li>Long break: 15 min</li>
+        <li>Theme: Light</li>
+        <li>Sound: Soft Wind Chimes</li>
+        <li>Volume: 50%</li>
+        <li>Auto-start breaks: ON</li>
+        <li>Notifications: ON</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>📱 PWA Configuration</h3>
+  <ul>
+    <li><strong>manifest.json:</strong> App name, icons, theme color, display: standalone</li>
+    <li><strong>Service Worker:</strong> Precaches all 4 HTML files + assets, serves offline</li>
+    <li><strong>Icons:</strong> 192x192, 512x512 (sprout/plant themed)</li>
+    <li><strong>Splash screen:</strong> Branded loading screen on mobile</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>🎨 Design System Compliance</h3>
+  <ul>
+    <li><strong>Colors:</strong> Exact hex values from DESIGN.md (no pure black, warm tones)</li>
+    <li><strong>No hard borders:</strong> Color-blocking and background shifts only</li>
+    <li><strong>Typography:</strong> Plus Jakarta Sans (headlines/labels) + Be Vietnam Pro (body)</li>
+    <li><strong>Glassmorphism:</strong> Frosted sage at 80% opacity, 24px blur for overlays</li>
+    <li><strong>Animations:</strong> Cubic Bezier (0.34, 1.56, 0.64, 1) for bouncy organic feel</li>
+    <li><strong>Responsive:</strong> Mobile-first with desktop side nav</li>
+  </ul>
+</div>
+
+<p class="subtitle" style="margin-top:2rem"><strong>Does this complete design capture everything?</strong> Any missing features or adjustments before I write the formal spec?</p>

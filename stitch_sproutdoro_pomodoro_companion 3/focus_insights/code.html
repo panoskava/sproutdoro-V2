@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Focus Insights - Sproutdoro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-high": "#ece8de",
+                      "outline-variant": "#c6c8ba",
+                      "outline": "#76786c",
+                      "primary-fixed-dim": "#bbce95",
+                      "surface-container-highest": "#e6e2d8",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-fixed-variant": "#284870",
+                      "secondary-container": "#fd9e77",
+                      "on-primary-fixed": "#131f00",
+                      "surface-tint": "#546435",
+                      "primary": "#516233",
+                      "surface-dim": "#dddad0",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-container": "#fefcff",
+                      "on-surface": "#1c1c16",
+                      "primary-container": "#697b49",
+                      "error": "#ba1a1a",
+                      "tertiary-container": "#5876a1",
+                      "tertiary-fixed-dim": "#aac8f8",
+                      "on-secondary-container": "#763315",
+                      "secondary-fixed-dim": "#ffb598",
+                      "on-secondary-fixed-variant": "#763314",
+                      "on-tertiary-fixed": "#001c3a",
+                      "on-primary-container": "#faffe8",
+                      "surface-container": "#f1eee4",
+                      "secondary": "#934a29",
+                      "surface": "#fdf9ef",
+                      "primary-fixed": "#d6eaaf",
+                      "tertiary-fixed": "#d4e3ff",
+                      "error-container": "#ffdad6",
+                      "on-background": "#1c1c16",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-low": "#f7f3e9",
+                      "background": "#fdf9ef",
+                      "inverse-on-surface": "#f4f0e7",
+                      "on-primary": "#ffffff",
+                      "tertiary": "#3f5d87",
+                      "inverse-surface": "#31312a",
+                      "inverse-primary": "#bbce95",
+                      "on-secondary-fixed": "#370e00",
+                      "on-surface-variant": "#45483d",
+                      "on-primary-fixed-variant": "#3c4c20",
+                      "surface-bright": "#fdf9ef",
+                      "surface-variant": "#e6e2d8",
+                      "on-error": "#ffffff",
+                      "secondary-fixed": "#ffdbce"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "headline": ["Plus Jakarta Sans"],
+                      "body": ["Be Vietnam Pro"],
+                      "label": ["Plus Jakarta Sans"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body { font-family: 'Be Vietnam Pro', sans-serif; }
+        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .animate-bounce-subtle {
+            animation: bounce-subtle 3s infinite ease-in-out;
+        }
+        @keyframes bounce-subtle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-primary-fixed-dim">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="hidden md:flex h-screen w-64 rounded-r-[3rem] sticky left-0 top-0 bg-[#f7f3e9] dark:bg-[#1c1c16] shadow-[0px_12px_32px_rgba(147,74,41,0.08)] flex-col gap-8 py-10 px-4 z-40">
+<div class="px-6 flex flex-col gap-2">
+<h1 class="text-xl font-extrabold text-[#516233] dark:text-[#829460] font-headline tracking-tight">Sproutdoro</h1>
+<p class="text-xs font-label uppercase tracking-[0.05rem] text-[#516233]/60">Keep growing</p>
+</div>
+<nav class="flex flex-col gap-2 mt-4">
+<a class="flex items-center gap-3 text-[#516233]/50 dark:text-[#829460]/50 px-6 py-3 hover:bg-[#e6e2d8]/50 dark:hover:bg-[#2a2a24]/50 rounded-full transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">timer</span>
+<span class="font-label text-sm font-medium tracking-[0.05rem] uppercase">Focus</span>
+</a>
+<a class="flex items-center gap-3 text-[#516233]/50 dark:text-[#829460]/50 px-6 py-3 hover:bg-[#e6e2d8]/50 dark:hover:bg-[#2a2a24]/50 rounded-full transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">potted_plant</span>
+<span class="font-label text-sm font-medium tracking-[0.05rem] uppercase">Garden</span>
+</a>
+<a class="flex items-center gap-3 bg-[#e6e2d8] dark:bg-[#2a2a24] text-[#516233] dark:text-[#829460] rounded-full px-6 py-3 transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bar_chart</span>
+<span class="font-label text-sm font-medium tracking-[0.05rem] uppercase">Insights</span>
+</a>
+<a class="flex items-center gap-3 text-[#516233]/50 dark:text-[#829460]/50 px-6 py-3 hover:bg-[#e6e2d8]/50 dark:hover:bg-[#2a2a24]/50 rounded-full transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">settings</span>
+<span class="font-label text-sm font-medium tracking-[0.05rem] uppercase">Config</span>
+</a>
+</nav>
+<div class="mt-auto px-4">
+<button class="w-full bg-gradient-to-br from-primary to-primary-container text-white rounded-full py-4 font-headline font-bold text-sm shadow-lg hover:brightness-110 transition-all flex items-center justify-center gap-2 group">
+<span class="material-symbols-outlined text-lg animate-bounce-subtle">add_task</span>
+                    Start Session
+                </button>
+<div class="mt-8 flex items-center gap-3 px-2">
+<img alt="User's Profile Sprout" class="w-10 h-10 rounded-full object-cover border-2 border-primary-fixed shadow-sm" data-alt="portrait of a person with friendly expression, soft natural lighting, warm garden background, professional headshot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuABaUT5FqlzcuQpO1sDT_FrvM5Xnb-GMIsL9GChAKiifT_Plak5JRkHCsr7b4vQQw5d4KnKXbXMHgIrkJOfVwY3qaIT9ufvr0hH43p5JSl0kO8tZOm1AEOjgh0gsGnt4EXZ7l9ruWKpg_GVp8Pv5Bfl1Z1DJfQHANANcTNe94nGGV30R4b5cuGhE7kt3RmF92EVzsmtzs5d3rQwHw1OiBbT__mc6tduh9GlOA7_WEx2Ix_WWYRGgDG2SiQi_hzj153Vqo5_w1e77bKR"/>
+<div class="flex flex-col">
+<span class="text-xs font-bold text-on-surface">Alex Gardener</span>
+<span class="text-[10px] text-on-surface-variant">Master Cultivator</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 px-6 md:px-12 py-10 max-w-6xl mx-auto w-full">
+<!-- Header Section -->
+<header class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div class="space-y-2">
+<h2 class="text-4xl md:text-5xl font-headline font-extrabold tracking-tight text-on-surface">Focus Insights</h2>
+<p class="text-on-surface-variant text-lg">Your productivity, blossoming beautifully.</p>
+</div>
+<div class="flex items-center gap-4 bg-surface-container-low px-6 py-3 rounded-full border border-outline-variant/10">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs border-2 border-surface">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">eco</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-white text-xs border-2 border-surface">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">wb_sunny</span>
+</div>
+</div>
+<span class="text-sm font-label font-bold text-primary">Level 12 Gardener</span>
+</div>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Hero Stat: Daily Streak -->
+<div class="md:col-span-4 bg-secondary-fixed rounded-lg p-8 flex flex-col justify-between relative overflow-hidden group">
+<div class="z-10">
+<span class="text-on-secondary-fixed-variant font-label text-xs uppercase tracking-widest font-bold">Daily Streak</span>
+<div class="mt-4 flex items-baseline gap-2">
+<h3 class="text-7xl font-headline font-extrabold text-on-secondary-fixed">14</h3>
+<span class="text-xl font-headline font-bold text-on-secondary-fixed-variant">Days</span>
+</div>
+</div>
+<p class="mt-4 text-on-secondary-fixed-variant/80 text-sm leading-relaxed z-10">You're on fire! Keep nurturing your habits to reach a 21-day sprout.</p>
+<span class="material-symbols-outlined absolute -right-4 -bottom-4 text-[12rem] text-secondary/10 group-hover:rotate-12 transition-transform duration-700">local_fire_department</span>
+</div>
+<!-- Plants Grown Visualization -->
+<div class="md:col-span-8 bg-surface-container-low rounded-lg p-8">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h4 class="text-xl font-headline font-bold">Plants Grown</h4>
+<p class="text-sm text-on-surface-variant">Focus milestones reached this week</p>
+</div>
+<div class="bg-surface-container-lowest p-2 rounded-xl flex gap-2">
+<button class="px-3 py-1 text-xs font-bold rounded-lg bg-primary text-white">Wk</button>
+<button class="px-3 py-1 text-xs font-bold rounded-lg hover:bg-surface-variant transition-colors">Mo</button>
+</div>
+</div>
+<div class="flex items-end justify-between h-48 gap-3">
+<!-- Custom Bar Chart -->
+<div class="flex-1 flex flex-col items-center gap-3 group">
+<div class="w-full bg-primary-fixed-dim rounded-t-full h-[40%] group-hover:h-[45%] transition-all duration-500 relative">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">4</div>
+</div>
+<span class="text-xs font-label text-on-surface-variant font-bold">Mon</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-3 group">
+<div class="w-full bg-primary-container rounded-t-full h-[70%] group-hover:h-[75%] transition-all duration-500 relative">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">7</div>
+</div>
+<span class="text-xs font-label text-on-surface-variant font-bold">Tue</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-3 group">
+<div class="w-full bg-primary rounded-t-full h-[90%] group-hover:h-[100%] transition-all duration-500 relative">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">9</div>
+</div>
+<span class="text-xs font-label text-on-surface-variant font-bold">Wed</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-3 group">
+<div class="w-full bg-primary-fixed-dim rounded-t-full h-[30%] group-hover:h-[35%] transition-all duration-500 relative">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">3</div>
+</div>
+<span class="text-xs font-label text-on-surface-variant font-bold">Thu</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-3 group">
+<div class="w-full bg-primary-container rounded-t-full h-[60%] group-hover:h-[65%] transition-all duration-500 relative">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">6</div>
+</div>
+<span class="text-xs font-label text-on-surface-variant font-bold">Fri</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-3 group">
+<div class="w-full bg-primary-fixed rounded-t-full h-[20%] group-hover:h-[25%] transition-all duration-500 relative">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">2</div>
+</div>
+<span class="text-xs font-label text-on-surface-variant font-bold">Sat</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-3 group">
+<div class="w-full bg-primary-fixed-dim rounded-t-full h-[45%] group-hover:h-[50%] transition-all duration-500 relative">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">5</div>
+</div>
+<span class="text-xs font-label text-on-surface-variant font-bold">Sun</span>
+</div>
+</div>
+</div>
+<!-- Distribution Pie Chart -->
+<div class="md:col-span-7 bg-surface-container-low rounded-lg p-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+<div class="relative flex items-center justify-center">
+<!-- Faux Pie Chart with SVG -->
+<svg class="w-48 h-48 transform -rotate-90" viewbox="0 0 100 100">
+<circle cx="50" cy="50" fill="none" r="40" stroke="#ece8de" stroke-width="12"></circle>
+<circle cx="50" cy="50" fill="none" r="40" stroke="#516233" stroke-dasharray="160 251" stroke-width="12"></circle>
+<circle cx="50" cy="50" fill="none" r="40" stroke="#934a29" stroke-dasharray="60 251" stroke-dashoffset="-160" stroke-width="12"></circle>
+<circle cx="50" cy="50" fill="none" r="40" stroke="#fd9e77" stroke-dasharray="31 251" stroke-dashoffset="-220" stroke-width="12"></circle>
+</svg>
+<div class="absolute flex flex-col items-center">
+<span class="text-2xl font-headline font-bold">32h</span>
+<span class="text-[10px] uppercase font-label font-bold text-on-surface-variant">Total</span>
+</div>
+</div>
+<div class="space-y-4">
+<h4 class="text-xl font-headline font-bold">Focus Distribution</h4>
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-primary"></div>
+<span class="text-sm font-medium">Deep Work</span>
+</div>
+<span class="text-sm font-bold">65%</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-secondary"></div>
+<span class="text-sm font-medium">Reading</span>
+</div>
+<span class="text-sm font-bold">24%</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-secondary-container"></div>
+<span class="text-sm font-medium">Planning</span>
+</div>
+<span class="text-sm font-bold">11%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Total Focus Hours -->
+<div class="md:col-span-5 bg-tertiary-fixed rounded-lg p-8 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<h4 class="text-on-tertiary-fixed font-headline font-bold text-xl">Total Focus</h4>
+<span class="material-symbols-outlined text-on-tertiary-fixed-variant">schedule</span>
+</div>
+<div class="mt-4 flex items-baseline gap-2">
+<h3 class="text-6xl font-headline font-extrabold text-on-tertiary-fixed">124</h3>
+<span class="text-xl font-headline font-bold text-on-tertiary-fixed-variant">Hours</span>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t border-on-tertiary-fixed-variant/10">
+<div class="flex justify-between items-center mb-2">
+<span class="text-sm text-on-tertiary-fixed-variant font-medium">Monthly Goal</span>
+<span class="text-sm text-on-tertiary-fixed font-bold">82%</span>
+</div>
+<div class="w-full bg-tertiary-fixed-dim/30 h-3 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full rounded-full w-[82%]"></div>
+</div>
+</div>
+</div>
+<!-- Gardening Achievements - Horizontal Layout -->
+<div class="md:col-span-12 bg-surface-container rounded-xl p-8 overflow-hidden relative">
+<div class="flex flex-col md:flex-row items-center justify-between gap-8">
+<div class="flex-1 space-y-4">
+<h4 class="text-2xl font-headline font-extrabold">Gardening Achievements</h4>
+<p class="text-on-surface-variant">Each focus session nurtures a unique part of your digital sanctuary. Here’s what you’ve cultivated this month.</p>
+<div class="flex flex-wrap gap-3 pt-2">
+<div class="bg-surface-container-lowest px-4 py-2 rounded-full border border-outline-variant/20 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">park</span>
+<span class="text-xs font-bold">Oak of Focus</span>
+</div>
+<div class="bg-surface-container-lowest px-4 py-2 rounded-full border border-outline-variant/20 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">filter_vintage</span>
+<span class="text-xs font-bold">Morning Lavender</span>
+</div>
+<div class="bg-surface-container-lowest px-4 py-2 rounded-full border border-outline-variant/20 flex items-center gap-2 opacity-50 grayscale">
+<span class="material-symbols-outlined text-sm">potted_plant</span>
+<span class="text-xs font-bold">Midnight Ivy</span>
+</div>
+</div>
+</div>
+<div class="flex-shrink-0 grid grid-cols-2 gap-4">
+<div class="w-32 h-32 bg-surface-container-highest rounded-2xl flex items-center justify-center group overflow-hidden">
+<img alt="Plant Achievement 1" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="macro close-up of vibrant green moss and small woodland sprouts with soft bokeh background and warm light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA97zxOe8vvxB8fYVwgXfF5jTUbV_R88My_Ww65lpoMGaU-hkdvUUWgtnwKUk5Qan3Omjt5utGsmJzOJUYBYU7ITvrbbzYB1qCZJCXCIjK_sMQK4V9zbxCRQ7Vdq2hHvng2vKert7dkK03EHDbusqiNsiQwgOLl426LLB0139cqyjJxHMPD8mSRMJqLclb9Tm361uGNb20cG747whC_OIi7vWpP7M8DLmpS5pn6C6WpYAnKhauxZx5mNiSWli_9MHNW_v_eZfaQgv9T"/>
+</div>
+<div class="w-32 h-32 bg-surface-container-highest rounded-2xl flex items-center justify-center group overflow-hidden translate-y-4">
+<img alt="Plant Achievement 2" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="single golden autumn leaf resting on soft earthy soil, soft focused morning light, ethereal atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfZ5DknWJDZy10LkRPMjubp0eQrwnwrR14Mfualo6FNkLOciZ7Iw_D1ak8qHd6elA4xoT6Fv8_Dw15D5GEh3V-Nc5F7siLRoQTTvNJ-tSDT56AaRfFHRKhc-6oEBXnSAYUDwmujpL8QRvG4hoC3JWqfbImr-TMF8UcmRA_o1uwEBc6gK7-YjNMv7_rinmiQUyNXmepfw-9E73wW1AA5D7y6_G3XNRyPSr2CroiiSWPgBoN_c_bdxRmM84NoYpCeenOP8_TBJfYTo89"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer-style Encouragement -->
+<footer class="mt-16 text-center space-y-4">
+<div class="inline-flex items-center gap-2 text-primary/60 font-medium">
+<span class="material-symbols-outlined text-sm">auto_awesome</span>
+<span>Growth isn't always visible, but it's always happening.</span>
+</div>
+<div class="flex justify-center gap-8 mt-4 opacity-40">
+<span class="material-symbols-outlined">psychology</span>
+<span class="material-symbols-outlined">spa</span>
+<span class="material-symbols-outlined">self_improvement</span>
+</div>
+</footer>
+</main>
+</div>
+<!-- Mobile Navigation Bar -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-low/80 backdrop-blur-xl px-6 py-4 flex justify-between items-center z-50">
+<a class="text-on-surface-variant flex flex-col items-center gap-1" href="#">
+<span class="material-symbols-outlined">timer</span>
+<span class="text-[10px] font-bold">Focus</span>
+</a>
+<a class="text-on-surface-variant flex flex-col items-center gap-1" href="#">
+<span class="material-symbols-outlined">potted_plant</span>
+<span class="text-[10px] font-bold">Garden</span>
+</a>
+<a class="text-primary flex flex-col items-center gap-1" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bar_chart</span>
+<span class="text-[10px] font-bold">Insights</span>
+</a>
+<a class="text-on-surface-variant flex flex-col items-center gap-1" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-bold">Config</span>
+</a>
+</div>
+</body></html>

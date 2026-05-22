@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sproutdoro | My Garden</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@300;400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#ece8de",
+                    "outline-variant": "#c6c8ba",
+                    "outline": "#76786c",
+                    "primary-fixed-dim": "#bbce95",
+                    "surface-container-highest": "#e6e2d8",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed-variant": "#284870",
+                    "secondary-container": "#fd9e77",
+                    "on-primary-fixed": "#131f00",
+                    "surface-tint": "#546435",
+                    "primary": "#516233",
+                    "surface-dim": "#dddad0",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-container": "#fefcff",
+                    "on-surface": "#1c1c16",
+                    "primary-container": "#697b49",
+                    "error": "#ba1a1a",
+                    "tertiary-container": "#5876a1",
+                    "tertiary-fixed-dim": "#aac8f8",
+                    "on-secondary-container": "#763315",
+                    "secondary-fixed-dim": "#ffb598",
+                    "on-secondary-fixed-variant": "#763314",
+                    "on-tertiary-fixed": "#001c3a",
+                    "on-primary-container": "#faffe8",
+                    "surface-container": "#f1eee4",
+                    "secondary": "#934a29",
+                    "surface": "#fdf9ef",
+                    "primary-fixed": "#d6eaaf",
+                    "tertiary-fixed": "#d4e3ff",
+                    "error-container": "#ffdad6",
+                    "on-background": "#1c1c16",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-low": "#f7f3e9",
+                    "background": "#fdf9ef",
+                    "inverse-on-surface": "#f4f0e7",
+                    "on-primary": "#ffffff",
+                    "tertiary": "#3f5d87",
+                    "inverse-surface": "#31312a",
+                    "inverse-primary": "#bbce95",
+                    "on-secondary-fixed": "#370e00",
+                    "on-surface-variant": "#45483d",
+                    "on-primary-fixed-variant": "#3c4c20",
+                    "surface-bright": "#fdf9ef",
+                    "surface-variant": "#e6e2d8",
+                    "on-error": "#ffffff",
+                    "secondary-fixed": "#ffdbce"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Be Vietnam Pro"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .garden-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface min-h-screen flex">
+<!-- SideNavBar (Authority Source: JSON) -->
+<aside class="h-screen w-64 rounded-r-xl sticky left-0 top-0 bg-[#f7f3e9] dark:bg-[#1c1c16] flex flex-col gap-8 py-10 px-4 z-40 shadow-[0px_12px_32px_rgba(147,74,41,0.08)]">
+<div class="px-6">
+<h1 class="text-xl font-extrabold text-[#516233] dark:text-[#829460] font-headline">Sproutdoro</h1>
+<p class="text-xs font-label tracking-[0.05rem] uppercase text-[#516233]/60 mt-1">Keep growing</p>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 text-[#516233]/50 dark:text-[#829460]/50 px-6 py-3 hover:bg-[#e6e2d8]/50 dark:hover:bg-[#2a2a24]/50 rounded-full transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="timer">timer</span>
+<span class="font-label text-sm font-medium tracking-[0.05rem] uppercase">Focus</span>
+</a>
+<!-- Active State: Garden (Semantic Mapping) -->
+<a class="flex items-center gap-3 bg-[#e6e2d8] dark:bg-[#2a2a24] text-[#516233] dark:text-[#829460] rounded-full px-6 py-3" href="#">
+<span class="material-symbols-outlined" data-icon="potted_plant" style="font-variation-settings: 'FILL' 1;">potted_plant</span>
+<span class="font-label text-sm font-medium tracking-[0.05rem] uppercase">Garden</span>
+</a>
+<a class="flex items-center gap-3 text-[#516233]/50 dark:text-[#829460]/50 px-6 py-3 hover:bg-[#e6e2d8]/50 dark:hover:bg-[#2a2a24]/50 rounded-full transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+<span class="font-label text-sm font-medium tracking-[0.05rem] uppercase">Insights</span>
+</a>
+<a class="flex items-center gap-3 text-[#516233]/50 dark:text-[#829460]/50 px-6 py-3 hover:bg-[#e6e2d8]/50 dark:hover:bg-[#2a2a24]/50 rounded-full transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label text-sm font-medium tracking-[0.05rem] uppercase">Config</span>
+</a>
+</nav>
+<div class="mt-auto px-4">
+<button class="w-full bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-full py-4 font-headline font-bold text-sm shadow-lg hover:opacity-90 transition-opacity">
+                Start Session
+            </button>
+<div class="mt-8 flex items-center gap-3 px-2">
+<img alt="User's Profile Sprout" class="w-10 h-10 rounded-full object-cover border-2 border-primary-fixed" data-alt="Soft focused portrait of a smiling person with warm lighting and a natural garden background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnd5KgGao0Sa4BfFEi-cZ1EIBOA95Pm7Ngk0uCmQw0sN1qz0I_KrIutjiI9cr_Nw0hqriYE2GsgFE5IIZrLRIU6qq9LGwxR_Qp8PHEWz6XdqmkXV9wLV78DIuzoKGYDHcUZkdOA7fkGlXOY_h3Q9YcTlYSpi_S_7foxeqz8IEEJeYlZD2hRXKGw6ICkz1vLkMgvNOP4MnabxxQe0uoqBzNDFoghxfhPcsbT_zkFdWwZMl5kkh_356KWAbn7FhfLmzXDi31vPj4JUr5"/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">Alex Gardener</p>
+<p class="text-[10px] text-secondary font-medium">Lvl 12 Oak</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 px-8 lg:px-16 py-12 max-w-7xl mx-auto">
+<!-- Header Section -->
+<header class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div class="space-y-2">
+<span class="inline-block px-4 py-1 bg-secondary-fixed text-on-secondary-fixed rounded-full text-xs font-bold tracking-widest uppercase font-label">Trophy Room</span>
+<h2 class="text-5xl font-headline font-extrabold text-primary tracking-tight">My Garden</h2>
+<p class="text-on-surface-variant max-w-md text-lg">Your focus is the sun that nurtures these seedlings into life. Every plant tells a story of dedicated time.</p>
+</div>
+<div class="flex gap-3">
+<div class="bg-surface-container-low px-6 py-4 rounded-xl flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="eco">eco</span>
+</div>
+<div>
+<p class="text-[10px] uppercase font-bold text-outline tracking-wider font-label">Total Plants</p>
+<p class="text-2xl font-headline font-extrabold text-primary">24</p>
+</div>
+</div>
+<div class="bg-surface-container-low px-6 py-4 rounded-xl flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="schedule">schedule</span>
+</div>
+<div>
+<p class="text-[10px] uppercase font-bold text-outline tracking-wider font-label">Focus Hours</p>
+<p class="text-2xl font-headline font-extrabold text-secondary">158</p>
+</div>
+</div>
+</div>
+</header>
+<!-- Bento-Style Grid of Plants -->
+<section class="garden-grid">
+<!-- Featured Plant Card -->
+<div class="md:col-span-2 bg-surface-container-highest rounded-lg overflow-hidden relative flex flex-col md:flex-row">
+<div class="md:w-1/2 h-64 md:h-auto overflow-hidden">
+<img alt="Sunflowers" class="w-full h-full object-cover transition-transform duration-700 hover:scale-105" data-alt="Vibrant yellow sunflowers reaching towards a clear blue sky in bright morning sunlight, selective focus on petals" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAx0s69J0el_UMFa8WZG575iF9MNrQE_xrhemsD6892c0UyqvjjEQeGWlkpTun-U7fKYIdBQAz8F9ZZoCr09NSuNwrviFO43fw0Cj69rxszy2dr7130NOlGlOo_5vWfY-Q1oNgBzzixlyccRHIyQHKBTp5AbJTkSe7xhC6Hn0e-Jt97P-ST5BbfG-Wm3J8SVRcrm2O6acmoV4IHZmtM_cAo69yg8wlBvbl2essAJQnTAYhHrFvIsvLKgx84vt1ygZYrkiF2ND2-dEwM"/>
+</div>
+<div class="md:w-1/2 p-8 flex flex-col justify-center bg-gradient-to-br from-surface-container-highest to-surface-container-high">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-secondary-container" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold uppercase tracking-widest text-secondary font-label">Masterpiece</span>
+</div>
+<h3 class="text-3xl font-headline font-extrabold text-on-surface mb-2">Golden Sunflower</h3>
+<p class="text-on-surface-variant mb-6 text-sm leading-relaxed">Grown during your 4-hour deep focus marathon. A symbol of resilience and warmth.</p>
+<div class="flex items-center justify-between border-t border-outline-variant/20 pt-6">
+<div>
+<p class="text-[10px] uppercase font-bold text-outline font-label">Grown on</p>
+<p class="font-bold text-primary">May 14, 2024</p>
+</div>
+<button class="bg-surface-container-lowest text-primary px-6 py-2 rounded-full font-bold text-sm shadow-sm hover:bg-white transition-all">Details</button>
+</div>
+</div>
+</div>
+<!-- Individual Plant Cards -->
+<!-- Lavender -->
+<div class="bg-surface-container-low rounded-lg p-6 group hover:bg-surface-container-high transition-all duration-300">
+<div class="aspect-square rounded-DEFAULT overflow-hidden mb-6 bg-tertiary-fixed/30 relative">
+<img alt="Lavender" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Soft purple lavender fields at sunset with warm hazy lighting and atmospheric blur in the background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH80r7G1NZ-oQZfbAM5nG2o40D6YO492K2cG3IbPXhqVzQk0mGhcWwRa4A63lqUIqGpu2bdJ1IS_nWQDoIRELxpVQ5GhIbcWNmmpGe-02cK8cvizCNTFNYQQnFr6wQMXzXHwz2cSU9oNvhcfsCDG7TPDdb5KOGhzptmpv58Pi2rCyFJqHARNY4VyrVMjev2hmXw5tQd5W9gt6_bv3MkpCti9hJIYfk_e_9eNS5oa8T7-uH2oPPboLeKGQPJJzGt2B3Y4oiw2mrdRvR"/>
+<div class="absolute bottom-3 right-3 bg-white/80 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-tertiary">Rare</div>
+</div>
+<h4 class="text-xl font-headline font-bold text-on-surface mb-1">Twilight Lavender</h4>
+<p class="text-xs text-outline mb-4">Grown: April 22, 2024</p>
+<div class="h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-tertiary w-full rounded-full"></div>
+</div>
+<p class="text-[10px] mt-2 font-bold text-tertiary-container uppercase font-label">Level 5 Maturity</p>
+</div>
+<!-- Fern -->
+<div class="bg-surface-container-low rounded-lg p-6 group hover:bg-surface-container-high transition-all duration-300">
+<div class="aspect-square rounded-DEFAULT overflow-hidden mb-6 bg-primary-fixed/30 relative">
+<img alt="Fern" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Lush green fern leaves in a shaded forest with soft dappled sunlight filtering through canopy leaves" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBj0ZemnDJpe7_qYnst8O-CUtJEE7_6KesX8YhSRJykfIbNASTyInveFMgL981fOkmJsE0V5ZYU98P_N1EzfMuuwsLLaVhevJgKRdH5wE6xju-tedm9W5IpIl994sdgNIN9kC_99GVu9Y4Yme2U0Y73jab8-1Sr4Jk3r87ZeNlUVj9CJXZpLf8rVEFbUK25wgSAiubDAm1vz0ect7YVc9Ls05oBou2uE53bfs-UmEamkB-Uh_G7HuUofMJrdb4TZVC_ml7wRsUWXASy"/>
+</div>
+<h4 class="text-xl font-headline font-bold text-on-surface mb-1">Silver Fern</h4>
+<p class="text-xs text-outline mb-4">Grown: May 02, 2024</p>
+<div class="h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary w-2/3 rounded-full"></div>
+</div>
+<p class="text-[10px] mt-2 font-bold text-primary-container uppercase font-label">Level 3 Maturity</p>
+</div>
+<!-- Succulent -->
+<div class="bg-surface-container-low rounded-lg p-6 group hover:bg-surface-container-high transition-all duration-300">
+<div class="aspect-square rounded-DEFAULT overflow-hidden mb-6 bg-secondary-fixed/30 relative">
+<img alt="Succulent" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Close-up of a pale green succulent with geometric leaf patterns and soft pink edges in bright natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGw0QR1prLQCbU629dtK4xm2vi1t1z4192u4wenJGiTma5bW36Et7XPaVcF2y9OboBu7UzFNACba2RQd6GYnYZeXTWxfv6RMtmEBw-RCGrU5nVV9mfzzt8ZPnNDUgFqp_xBZxv_zK_Nwy59enIrGl-e6QdyGD0FgsbrswPP8nFn-gV1NWFZCr7tw-l75yrDVGbuF0YaZ5tOkiA0yv3N9Vi7JQqTz5K3m4pA4XlsxlWKnyA3A7DJUvUs-4g1uWCFZbbtpx4T7caNh8o"/>
+</div>
+<h4 class="text-xl font-headline font-bold text-on-surface mb-1">Rosette Succulent</h4>
+<p class="text-xs text-outline mb-4">Grown: March 15, 2024</p>
+<div class="h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-full rounded-full"></div>
+</div>
+<p class="text-[10px] mt-2 font-bold text-on-secondary-container uppercase font-label">Level 5 Maturity</p>
+</div>
+<!-- Monstera -->
+<div class="bg-surface-container-low rounded-lg p-6 group hover:bg-surface-container-high transition-all duration-300">
+<div class="aspect-square rounded-DEFAULT overflow-hidden mb-6 bg-primary-fixed/30 relative">
+<img alt="Monstera" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Large glossy monstera leaf with iconic holes standing against a clean minimal white wall with soft shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZXQipvR6sOejDWzDVaGtB1V2tjT0M3g1p3EpJlsMQ1JjX43T8of9aNC2GtSP1Z3EbW8RufalMGyeNVK1uU4X2S7eZkvtHE_byoWnN1Ps_Krp2skmDeEL1CHE0QUA76ORkl6JaKHeqg5vF7q8uLIbg_3JqGew3b5PRUsUUzhnqUhAwuKxX0FwZgzVEYqPugLiBIQ80DAAGlUxxlJDsuf4ZP6fD4IEJKBRYcAn5OoxUQI15jvjucRA_sG10vmSrUWbQvGdFgWSYFVMz"/>
+</div>
+<h4 class="text-xl font-headline font-bold text-on-surface mb-1">Giant Monstera</h4>
+<p class="text-xs text-outline mb-4">Grown: Feb 28, 2024</p>
+<div class="h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary w-1/4 rounded-full"></div>
+</div>
+<p class="text-[10px] mt-2 font-bold text-primary-container uppercase font-label">Level 1 Maturity</p>
+</div>
+<!-- Terracotta Accent Card (Empty Slot/CTA) -->
+<div class="bg-secondary-fixed rounded-lg p-6 flex flex-col items-center justify-center text-center border-2 border-dashed border-secondary/20 group cursor-pointer hover:bg-secondary-container/30 transition-all">
+<div class="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 text-secondary shadow-md group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl" data-icon="add_circle">add_circle</span>
+</div>
+<h4 class="text-xl font-headline font-bold text-on-secondary-fixed mb-1">New Seedling</h4>
+<p class="text-xs text-on-secondary-fixed-variant max-w-[150px]">Start a focus session to plant a new memory.</p>
+</div>
+</section>
+<!-- Floating Action Button (FAB Logic: Only on Dashboard/Garden) -->
+<div class="fixed bottom-10 right-10 z-50">
+<button class="flex items-center gap-3 bg-primary text-on-primary px-8 py-4 rounded-full shadow-[0px_12px_32px_rgba(147,74,41,0.08)] hover:scale-105 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="temp_preferences_custom">temp_preferences_custom</span>
+<span class="font-headline font-bold">New Sprout</span>
+</button>
+</div>
+</main>
+</body></html>

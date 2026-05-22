@@ -1,0 +1,64 @@
+<h2>Updated Architecture: Multi-Page App</h2>
+<p class="subtitle">Separate HTML files, shared CSS/JS, standard navigation</p>
+
+<div class="section">
+  <h3>Page Structure</h3>
+  <div class="mockup">
+    <div class="mockup-header">4 Separate HTML Pages</div>
+    <div class="mockup-body" style="font-family:monospace; font-size:0.85rem; line-height:1.6;">
+      <div style="display:flex; flex-direction:column; gap:0.5rem;">
+        <div style="background:#e8f5e9; padding:0.75rem 1rem; border-radius:8px; border-left:4px solid #516233;">
+          <strong>index.html</strong> → Focus Timer (Home)<br>
+          <span style="color:#666;">script: timer.ts | circular progress, countdown, controls</span>
+        </div>
+        <div style="background:#fff3e0; padding:0.75rem 1rem; border-radius:8px; border-left:4px solid #934a29;">
+          <strong>settings.html</strong> → Settings<br>
+          <span style="color:#666;">script: settings.ts | sliders, toggles, theme, sound picker</span>
+        </div>
+        <div style="background:#e3f2fd; padding:0.75rem 1rem; border-radius:8px; border-left:4px solid #3f5d87;">
+          <strong>insights.html</strong> → Focus Insights<br>
+          <span style="color:#666;">script: insights.ts | charts, streaks, achievements</span>
+        </div>
+        <div style="background:#fce4ec; padding:0.75rem 1rem; border-radius:8px; border-left:4px solid #ba1a1a;">
+          <strong>garden.html</strong> → My Garden<br>
+          <span style="color:#666;">script: garden.ts | plant gallery, growth stages, collection</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Shared Assets (each page imports these)</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-family:monospace; font-size:0.85rem;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+        <div>
+          <strong>styles/</strong><br>
+          • main.css (Tailwind build output)<br>
+          • components.css (shared components)<br>
+          • animations.css (organic transitions)
+        </div>
+        <div>
+          <strong>scripts/</strong><br>
+          • storage.ts (IndexedDB wrapper)<br>
+          • state.ts (shared state/pub-sub)<br>
+          • audio.ts (sound manager)<br>
+          • components/ (shared TS components)
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Navigation</h3>
+  <p>Standard <code>&lt;a href="..."&gt;</code> links between pages. Each page includes the SideNav (desktop) and MobileNav, with the active page highlighted. No JavaScript router needed — simpler and more reliable.</p>
+</div>
+
+<div class="section">
+  <h3>PWA Notes</h3>
+  <p>Multi-page PWA is fully supported. The service worker caches all 4 HTML files + assets for offline use. Each page has its own entry in the navigation, and the install prompt works across all pages.</p>
+</div>
+
+<p class="subtitle" style="margin-top:2rem">This simpler architecture eliminates the need for a router and fits your multi-page preference. Does this look right?</p>
