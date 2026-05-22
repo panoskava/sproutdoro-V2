@@ -99,11 +99,13 @@ export async function getSessions(
     if (startDate !== undefined || endDate !== undefined) {
       const tx = db.transaction('sessions')
       const index = tx.store.index('by-date')
-      const range = startDate !== undefined && endDate !== undefined
-        ? IDBKeyRange.bound(startDate, endDate)
-        : startDate !== undefined
-          ? IDBKeyRange.lowerBound(startDate)
-          : IDBKeyRange.upperBound(endDate!)
+      const startTime = startDate?.getTime()
+      const endTime = endDate?.getTime()
+      const range = startTime !== undefined && endTime !== undefined
+        ? IDBKeyRange.bound(startTime, endTime)
+        : startTime !== undefined
+          ? IDBKeyRange.lowerBound(startTime)
+          : IDBKeyRange.upperBound(endTime!)
       return await index.getAll(range)
     }
     return await db.getAll('sessions')
@@ -310,8 +312,11 @@ export async function getInsights(): Promise<Insights> {
       ...data,
     }))
 
-    const lastSessionDate =
+    const lastSessionTimestamp =
       sessions.length > 0 ? Math.max(...sessions.map((s) => s.startTime)) : 0
+    const lastSessionDate = lastSessionTimestamp > 0
+      ? new Date(lastSessionTimestamp).setHours(0, 0, 0, 0)
+      : 0
 
     return {
       currentStreak,
