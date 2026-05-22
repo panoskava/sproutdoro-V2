@@ -1,21 +1,17 @@
+import { NAV_ITEMS } from './nav-config'
+
 export function createMobileNav(currentPage: string): HTMLElement {
   const nav = document.createElement('nav')
   nav.className =
     'flex md:hidden fixed bottom-0 left-0 right-0 glass-sage z-50 pb-safe'
 
-  const items = [
-    { id: 'focus', label: 'Focus', icon: 'timer', href: 'index.html' },
-    { id: 'garden', label: 'Garden', icon: 'local_florist', href: 'garden.html' },
-    { id: 'insights', label: 'Insights', icon: 'insights', href: 'insights.html' },
-    { id: 'config', label: 'Config', icon: 'settings', href: 'settings.html' },
-  ]
-
   const list = document.createElement('ul')
   list.className = 'flex items-center justify-around w-full py-2 px-4'
 
-  for (const item of items) {
-    const isActive = currentPage === item.id
-    const isGarden = item.id === 'garden'
+  for (const item of NAV_ITEMS) {
+    const itemId = item.label.toLowerCase()
+    const isActive = currentPage === itemId
+    const isGarden = itemId === 'garden'
     const li = document.createElement('li')
     li.className = 'flex-1 flex flex-col items-center'
 
