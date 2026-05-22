@@ -1,4 +1,4 @@
-import { openDB, type IDBPDatabase } from 'idb'
+import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import type { Settings, Session, Plant, Insights } from '../types'
 
 const DB_NAME = 'sproutdoro-db'
@@ -15,11 +15,32 @@ export const DEFAULT_SETTINGS: Settings = {
   notifications: true,
 }
 
-let dbPromise: Promise<IDBPDatabase<unknown>> | null = null
+interface SproutdoroDB extends DBSchema {
+  settings: {
+    key: string
+    value: Settings & { id: string }
+  }
+  sessions: {
+    key: string
+    value: Session
+    indexes: { 'by-date': number; 'by-type': string }
+  }
+  plants: {
+    key: string
+    value: Plant
+    indexes: { 'by-rarity': string; 'by-level': number }
+  }
+  insights: {
+    key: string
+    value: Insights & { id: string }
+  }
+}
 
-function getDB(): Promise<IDBPDatabase<unknown>> {
+let dbPromise: Promise<IDBPDatabase<SproutdoroDB>> | null = null
+
+function getDB(): Promise<IDBPDatabase<SproutdoroDB>> {
   if (!dbPromise) {
-    dbPromise = openDB(DB_NAME, DB_VERSION, {
+    dbPromise = openDB<SproutdoroDB>(DB_NAME, DB_VERSION, {
       upgrade(db) {
         if (!db.objectStoreNames.contains('settings')) {
           db.createObjectStore('settings', { keyPath: 'id' })
@@ -60,8 +81,8 @@ export async function getSettings(): Promise<Settings> {
     const stored = await db.get('settings', 'default')
     if (!stored) return DEFAULT_SETTINGS
     // Strip the synthetic id before returning
-    const { id, ...settings } = stored as Settings & { id: string }
-    return settings as Settings
+    const { id, ...settings } = stored
+    return settings
   } catch (err) {
     console.error('getSettings failed:', err)
     return DEFAULT_SETTINGS
@@ -69,12 +90,8 @@ export async function getSettings(): Promise<Settings> {
 }
 
 export async function saveSettings(settings: Settings): Promise<void> {
-  try {
-    const db = await getDB()
-    await db.put('settings', { ...settings, id: 'default' })
-  } catch (err) {
-    console.error('saveSettings failed:', err)
-  }
+  const db = await getDB()
+  await db.put('settings', { ...settings, id: 'default' })
 }
 
 /* ------------------------------------------------------------------ */
@@ -82,12 +99,8 @@ export async function saveSettings(settings: Settings): Promise<void> {
 /* ------------------------------------------------------------------ */
 
 export async function createSession(session: Session): Promise<void> {
-  try {
-    const db = await getDB()
-    await db.put('sessions', session)
-  } catch (err) {
-    console.error('createSession failed:', err)
-  }
+  const db = await getDB()
+  await db.put('sessions', session)
 }
 
 export async function getSessions(
@@ -141,12 +154,8 @@ export async function getSessionById(id: string): Promise<Session | undefined> {
 /* ------------------------------------------------------------------ */
 
 export async function createPlant(plant: Plant): Promise<void> {
-  try {
-    const db = await getDB()
-    await db.put('plants', plant)
-  } catch (err) {
-    console.error('createPlant failed:', err)
-  }
+  const db = await getDB()
+  await db.put('plants', plant)
 }
 
 export async function getAllPlants(): Promise<Plant[]> {
@@ -170,12 +179,8 @@ export async function getPlantById(id: string): Promise<Plant | undefined> {
 }
 
 export async function updatePlant(plant: Plant): Promise<void> {
-  try {
-    const db = await getDB()
-    await db.put('plants', plant)
-  } catch (err) {
-    console.error('updatePlant failed:', err)
-  }
+  const db = await getDB()
+  await db.put('plants', plant)
 }
 
 export async function getFeaturedPlant(): Promise<Plant | undefined> {
@@ -215,118 +220,117 @@ function getWeekStart(dateStr: string): string {
   return `${y}-${m}-${dayStr}`
 }
 
+async function computeInsights(): Promise<Insights> {
+  const db = await getDB()
+  const sessions: Session[] = await db.getAll('sessions')
+  const plants: Plant[] = await db.getAll('plants')
+
+  /* ---- daily aggregation ---- */
+  const dailyMap = new Map<
+    string,
+    { sessionsCompleted: number; totalFocusMinutes: number; plantsGrown: number }
+  >()
+
+  for (const s of sessions) {
+    if (!s.completed || s.type !== 'work') continue
+    const key = toISODate(s.startTime)
+    const cur = dailyMap.get(key) ?? {
+      sessionsCompleted: 0,
+      totalFocusMinutes: 0,
+      plantsGrown: 0,
+    }
+    cur.sessionsCompleted += 1
+    cur.totalFocusMinutes += s.duration
+    dailyMap.set(key, cur)
+  }
+
+  for (const p of plants) {
+    const key = toISODate(p.plantedAt)
+    const cur = dailyMap.get(key) ?? {
+      sessionsCompleted: 0,
+      totalFocusMinutes: 0,
+      plantsGrown: 0,
+    }
+    cur.plantsGrown += 1
+    dailyMap.set(key, cur)
+  }
+
+  const sortedDates = Array.from(dailyMap.keys()).sort()
+
+  /* ---- streaks ---- */
+  let currentStreak = 0
+  let longestStreak = 0
+
+  const todayKey = toISODate(Date.now())
+  const todayTs = new Date(todayKey + 'T00:00:00').getTime()
+
+  // Current streak: walk backwards from today (or yesterday if today empty)
+  const startKey = dailyMap.has(todayKey) ? todayKey : toISODate(todayTs - 24 * 60 * 60 * 1000)
+  if (dailyMap.has(startKey)) {
+    currentStreak = 1
+    let checkTs = new Date(startKey + 'T00:00:00').getTime() - 24 * 60 * 60 * 1000
+    while (dailyMap.has(toISODate(checkTs))) {
+      currentStreak += 1
+      checkTs -= 24 * 60 * 60 * 1000
+    }
+  }
+
+  // Longest streak
+  if (sortedDates.length > 0) {
+    let run = 1
+    longestStreak = 1
+    for (let i = 1; i < sortedDates.length; i++) {
+      const prev = new Date(sortedDates[i - 1] + 'T00:00:00').getTime()
+      const curr = new Date(sortedDates[i] + 'T00:00:00').getTime()
+      if ((curr - prev) / (24 * 60 * 60 * 1000) === 1) {
+        run += 1
+        longestStreak = Math.max(longestStreak, run)
+      } else {
+        run = 1
+      }
+    }
+  }
+
+  /* ---- stats structures ---- */
+  const dailyStats = sortedDates.map((date) => ({
+    date,
+    ...dailyMap.get(date)!,
+  }))
+
+  const weeklyMap = new Map<string, { totalFocusMinutes: number; plantsGrown: number }>()
+  for (const ds of dailyStats) {
+    const ws = getWeekStart(ds.date)
+    const cur = weeklyMap.get(ws) ?? { totalFocusMinutes: 0, plantsGrown: 0 }
+    cur.totalFocusMinutes += ds.totalFocusMinutes
+    cur.plantsGrown += ds.plantsGrown
+    weeklyMap.set(ws, cur)
+  }
+  const weeklyStats = Array.from(weeklyMap.entries()).map(([weekStart, data]) => ({
+    weekStart,
+    ...data,
+  }))
+
+  const lastSessionTimestamp =
+    sessions.length > 0 ? Math.max(...sessions.map((s) => s.startTime)) : 0
+  const lastSessionDate = lastSessionTimestamp > 0
+    ? new Date(lastSessionTimestamp).setHours(0, 0, 0, 0)
+    : 0
+
+  return {
+    currentStreak,
+    longestStreak,
+    lastSessionDate,
+    dailyStats,
+    weeklyStats,
+    achievements: [],
+    monthlyGoalHours: 40,
+  }
+}
+
 export async function getInsights(): Promise<Insights> {
   try {
-    const db = await getDB()
-    const cached = await db.get('insights', 'default')
-    if (cached) {
-      const { id, ...insights } = cached as Insights & { id: string }
-      return insights as Insights
-    }
-
-    const sessions: Session[] = await db.getAll('sessions')
-    const plants: Plant[] = await db.getAll('plants')
-
-    /* ---- daily aggregation ---- */
-    const dailyMap = new Map<
-      string,
-      { sessionsCompleted: number; totalFocusMinutes: number; plantsGrown: number }
-    >()
-
-    for (const s of sessions) {
-      if (!s.completed || s.type !== 'work') continue
-      const key = toISODate(s.startTime)
-      const cur = dailyMap.get(key) ?? {
-        sessionsCompleted: 0,
-        totalFocusMinutes: 0,
-        plantsGrown: 0,
-      }
-      cur.sessionsCompleted += 1
-      cur.totalFocusMinutes += s.duration
-      dailyMap.set(key, cur)
-    }
-
-    for (const p of plants) {
-      const key = toISODate(p.plantedAt)
-      const cur = dailyMap.get(key) ?? {
-        sessionsCompleted: 0,
-        totalFocusMinutes: 0,
-        plantsGrown: 0,
-      }
-      cur.plantsGrown += 1
-      dailyMap.set(key, cur)
-    }
-
-    const sortedDates = Array.from(dailyMap.keys()).sort()
-
-    /* ---- streaks ---- */
-    let currentStreak = 0
-    let longestStreak = 0
-
-    const todayKey = toISODate(Date.now())
-    const todayTs = new Date(todayKey + 'T00:00:00').getTime()
-
-    // Current streak: walk backwards from today (or yesterday if today empty)
-    const startKey = dailyMap.has(todayKey) ? todayKey : toISODate(todayTs - 24 * 60 * 60 * 1000)
-    if (dailyMap.has(startKey)) {
-      currentStreak = 1
-      let checkTs = new Date(startKey + 'T00:00:00').getTime() - 24 * 60 * 60 * 1000
-      while (dailyMap.has(toISODate(checkTs))) {
-        currentStreak += 1
-        checkTs -= 24 * 60 * 60 * 1000
-      }
-    }
-
-    // Longest streak
-    if (sortedDates.length > 0) {
-      let run = 1
-      longestStreak = 1
-      for (let i = 1; i < sortedDates.length; i++) {
-        const prev = new Date(sortedDates[i - 1] + 'T00:00:00').getTime()
-        const curr = new Date(sortedDates[i] + 'T00:00:00').getTime()
-        if ((curr - prev) / (24 * 60 * 60 * 1000) === 1) {
-          run += 1
-          longestStreak = Math.max(longestStreak, run)
-        } else {
-          run = 1
-        }
-      }
-    }
-
-    /* ---- stats structures ---- */
-    const dailyStats = sortedDates.map((date) => ({
-      date,
-      ...dailyMap.get(date)!,
-    }))
-
-    const weeklyMap = new Map<string, { totalFocusMinutes: number; plantsGrown: number }>()
-    for (const ds of dailyStats) {
-      const ws = getWeekStart(ds.date)
-      const cur = weeklyMap.get(ws) ?? { totalFocusMinutes: 0, plantsGrown: 0 }
-      cur.totalFocusMinutes += ds.totalFocusMinutes
-      cur.plantsGrown += ds.plantsGrown
-      weeklyMap.set(ws, cur)
-    }
-    const weeklyStats = Array.from(weeklyMap.entries()).map(([weekStart, data]) => ({
-      weekStart,
-      ...data,
-    }))
-
-    const lastSessionTimestamp =
-      sessions.length > 0 ? Math.max(...sessions.map((s) => s.startTime)) : 0
-    const lastSessionDate = lastSessionTimestamp > 0
-      ? new Date(lastSessionTimestamp).setHours(0, 0, 0, 0)
-      : 0
-
-    return {
-      currentStreak,
-      longestStreak,
-      lastSessionDate,
-      dailyStats,
-      weeklyStats,
-      achievements: [],
-      monthlyGoalHours: 40,
-    }
+    // Always compute from current data — no caching
+    return await computeInsights()
   } catch (err) {
     console.error('getInsights failed:', err)
     return {
@@ -342,10 +346,6 @@ export async function getInsights(): Promise<Insights> {
 }
 
 export async function updateInsights(insights: Insights): Promise<void> {
-  try {
-    const db = await getDB()
-    await db.put('insights', { ...insights, id: 'default' })
-  } catch (err) {
-    console.error('updateInsights failed:', err)
-  }
+  const db = await getDB()
+  await db.put('insights', { ...insights, id: 'default' })
 }
