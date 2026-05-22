@@ -96,10 +96,15 @@ export async function getSessions(
 ): Promise<Session[]> {
   try {
     const db = await getDB()
-    if (startDate !== undefined && endDate !== undefined) {
+    if (startDate !== undefined || endDate !== undefined) {
       const tx = db.transaction('sessions')
       const index = tx.store.index('by-date')
-      return await index.getAll(IDBKeyRange.bound(startDate, endDate))
+      const range = startDate !== undefined && endDate !== undefined
+        ? IDBKeyRange.bound(startDate, endDate)
+        : startDate !== undefined
+          ? IDBKeyRange.lowerBound(startDate)
+          : IDBKeyRange.upperBound(endDate!)
+      return await index.getAll(range)
     }
     return await db.getAll('sessions')
   } catch (err) {
