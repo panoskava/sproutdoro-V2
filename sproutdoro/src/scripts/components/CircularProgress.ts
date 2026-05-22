@@ -41,6 +41,7 @@ export function createCircularProgress(props: CircularProgressProps): SVGSVGElem
   track.setAttribute('stroke', trackColor)
   track.setAttribute('stroke-width', `${strokeWidth * 0.4}`)
   track.setAttribute('stroke-linecap', 'round')
+  track.setAttribute('data-role', 'track')
   svg.appendChild(track)
 
   // Progress track circle (thick, subtle fill)
@@ -53,6 +54,7 @@ export function createCircularProgress(props: CircularProgressProps): SVGSVGElem
   progressTrack.setAttribute('stroke-width', `${strokeWidth}`)
   progressTrack.setAttribute('stroke-linecap', 'round')
   progressTrack.setAttribute('stroke-opacity', '0.12')
+  progressTrack.setAttribute('data-role', 'progress-track')
   svg.appendChild(progressTrack)
 
   // Active arc (thick, animated)
@@ -66,10 +68,11 @@ export function createCircularProgress(props: CircularProgressProps): SVGSVGElem
   activeArc.setAttribute('stroke-linecap', 'round')
   activeArc.setAttribute('stroke-dasharray', `${circumference}`)
   activeArc.setAttribute('stroke-dashoffset', `${dashoffset}`)
+  activeArc.setAttribute('data-role', 'active-arc')
   activeArc.style.transition = 'stroke-dashoffset 0.5s ease-out'
   svg.appendChild(activeArc)
 
-  if (showSunDot && clampedProgress > 0) {
+  if (showSunDot) {
     // Calculate sun position
     const angle = clampedProgress * 2 * Math.PI
     const sunX = center + radius * Math.cos(angle)
@@ -81,6 +84,7 @@ export function createCircularProgress(props: CircularProgressProps): SVGSVGElem
     sunDot.setAttribute('cy', `${sunY}`)
     sunDot.setAttribute('r', `${strokeWidth * 0.8}`)
     sunDot.setAttribute('fill', sunDotColor)
+    sunDot.setAttribute('data-role', 'sun-dot')
     sunDot.style.transition = 'cx 0.5s ease-out, cy 0.5s ease-out'
     svg.appendChild(sunDot)
 
@@ -90,6 +94,7 @@ export function createCircularProgress(props: CircularProgressProps): SVGSVGElem
     innerDot.setAttribute('cy', `${sunY}`)
     innerDot.setAttribute('r', `${strokeWidth * 0.3}`)
     innerDot.setAttribute('fill', '#ffffff')
+    innerDot.setAttribute('data-role', 'inner-dot')
     innerDot.style.transition = 'cx 0.5s ease-out, cy 0.5s ease-out'
     svg.appendChild(innerDot)
   }
@@ -109,14 +114,14 @@ export function updateCircularProgress(
   const clampedProgress = Math.max(0, Math.min(1, progress))
   const dashoffset = circumference * (1 - clampedProgress)
 
-  const activeArc = svg.querySelector('circle:nth-of-type(3)') as SVGCircleElement
+  const activeArc = svg.querySelector('circle[data-role="active-arc"]') as SVGCircleElement
   if (activeArc) {
     activeArc.setAttribute('stroke-dashoffset', `${dashoffset}`)
   }
 
   // Update sun dots positions if they exist
-  const sunDots = svg.querySelectorAll('circle[fill]:not([fill="none"])')
-  if (sunDots.length >= 2 && clampedProgress > 0) {
+  const sunDots = svg.querySelectorAll('circle[data-role="sun-dot"], circle[data-role="inner-dot"]')
+  if (sunDots.length >= 2) {
     const angle = clampedProgress * 2 * Math.PI
     const sunX = center + radius * Math.cos(angle)
     const sunY = center + radius * Math.sin(angle)
