@@ -34,7 +34,7 @@ export async function runStorageTests(): Promise<void> {
 
   try {
     // Clear any existing test DB
-    indexedDB.deleteDatabase('sproutdoro')
+    indexedDB.deleteDatabase('sproutdoro-db')
 
     await initDB()
     console.log('Database initialized')
@@ -100,7 +100,10 @@ export async function runStorageTests(): Promise<void> {
     const singleSession = await getSessionById('s1')
     assert(singleSession?.id === 's1', 'getSessionById returns correct session')
 
-    const rangeSessions = await getSessions(todayStart, todayStart + 24 * 60 * 60 * 1000 - 1)
+    const rangeSessions = await getSessions(
+      new Date(todayStart),
+      new Date(todayStart + 24 * 60 * 60 * 1000 - 1)
+    )
     assert(rangeSessions.length === 2, 'getSessions with date range filters correctly')
 
     /* ---- Plant Tests ---- */
