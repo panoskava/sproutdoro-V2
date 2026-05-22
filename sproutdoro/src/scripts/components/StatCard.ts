@@ -5,12 +5,16 @@ interface StatCardProps {
   label: string
   value: string
   delay?: number
+  dataStat?: string
 }
 
 export function createStatCard(props: StatCardProps): HTMLElement {
-  const { icon, iconBg, iconColor, label, value, delay = 0 } = props
+  const { icon, iconBg, iconColor, label, value, delay = 0, dataStat } = props
 
   const card = document.createElement('div')
+  if (dataStat) {
+    card.dataset.stat = dataStat
+  }
   card.className =
     'stat-card-glass rounded-2xl p-5 flex items-center gap-4 transition-all duration-300 hover:-translate-y-1 cursor-default'
   if (delay > 0) {
