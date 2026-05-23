@@ -310,7 +310,7 @@ function renderPieChart(workSessions: Session[]): void {
 }
 
 function renderTotalFocus(
-  workSessions: Session[],
+  _workSessions: Session[],
   totalMinutes: number,
   monthlyGoalHours: number
 ): void {
