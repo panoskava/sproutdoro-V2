@@ -6,10 +6,13 @@ import {
   createCircularProgress,
   updateCircularProgress,
 } from './components/CircularProgress'
-import { getSettings, createSession, getTodaySessions } from './storage'
+import { getSettings, createSession, getTodaySessions, getCategories } from './storage'
+import { createCategoryPillRow, updateCategoryPillRow } from './components/CategoryPill'
+import type { Category } from '../types'
 import { Timer } from './timer-engine'
 import { AudioManager } from './audio'
 import { applyTheme } from './theme'
+import { createTimerAdjustButtons, updateTimerAdjustButtonsVisibility } from './components/TimerAdjustButtons'
 
 function formatTime(totalSeconds: number): { mm: string; ss: string } {
   const mins = Math.floor(totalSeconds / 60)
@@ -24,13 +27,19 @@ const TIMER_STATE_KEY = 'sproutdoro-timer-state'
 
 interface TimerStatePersist {
   mode: 'work' | 'shortBreak' | 'longBreak'
-  state: 'idle' | 'running' | 'paused'
+  state: 'idle' | 'running' | 'paused' | 'onBreak' | 'complete'
   remainingSeconds: number
   totalSeconds: number
   sessionCount: number
   lastTick: number | null
   adjustmentOffset: number
   modeAtAdjustmentStart: 'work' | 'shortBreak' | 'longBreak' | null
+  breakBookmark: {
+    remainingSeconds: number
+    totalSeconds: number
+    mode: 'work' | 'shortBreak' | 'longBreak'
+    adjustmentOffset: number
+  } | null
 }
 
 function saveTimerState(state: TimerStatePersist): void {
@@ -98,6 +107,7 @@ async function initTimerPage() {
   // Render stat cards
   const statsContainer = document.getElementById('stats-row')
   let todayFocusMinutes = 0
+  let currentCategory: string | null = null
   if (statsContainer) {
     try {
       const todaySessions = await getTodaySessions()
@@ -163,6 +173,32 @@ async function initTimerPage() {
     sessionGoalEl.textContent = `Session Goal: Deep Focus (${settings.workDuration}m)`
   }
 
+  // Load categories and render pill row
+  const categoryRowContainer = document.getElementById('category-pill-row')
+  if (categoryRowContainer) {
+    let categories: Category[] = []
+    try {
+      categories = await getCategories()
+    } catch (err) {
+      console.error('Failed to load categories:', err)
+    }
+
+    function handleCategorySelect(categoryId: string | null) {
+      currentCategory = categoryId
+      const row = document.getElementById('category-pill-row')
+      if (row) {
+        updateCategoryPillRow(row, categories, categoryId, handleCategorySelect)
+      }
+    }
+
+    const pillRow = createCategoryPillRow({
+      categories,
+      selectedCategoryId: null,
+      onSelect: handleCategorySelect,
+    })
+    categoryRowContainer.appendChild(pillRow)
+  }
+
   // Timer display elements
   const timeMins = document.getElementById('time-mins')
   const timeSecs = document.getElementById('time-secs')
@@ -217,6 +253,9 @@ async function initTimerPage() {
       `
     }
 
+    const showAdjust = state.state === 'running' || state.state === 'paused'
+    updateTimerAdjustButtonsVisibility(showAdjust)
+
     // Update Session Sprout stat
     if (statsContainer && state.mode === 'work') {
       const sproutCard = statsContainer.querySelector('[data-stat="session-sprout"]')
@@ -250,7 +289,7 @@ async function initTimerPage() {
         duration: actualDuration > 0 ? actualDuration : (timerState?.totalSeconds || 0) / 60,
         type: 'work',
         plantId: null,
-        category: 'focus' as string,
+        category: currentCategory,
         completed: true,
       } as import('../types').Session
 
@@ -374,6 +413,7 @@ async function initTimerPage() {
       timer.reset()
       audioManager.stopAmbient()
       clearTimerState()
+      updateTimerAdjustButtonsVisibility(false)
     })
   }
 
@@ -383,6 +423,22 @@ async function initTimerPage() {
       timer.skip()
       audioManager.stopAmbient()
     })
+  }
+
+  const ADJUST_AMOUNT_MINUTES = 5
+  const adjustContainer = document.getElementById('timer-adjust-container')
+  if (adjustContainer) {
+    const adjustButtons = createTimerAdjustButtons({
+      onIncrement: () => {
+        if (timer) timer.adjustTime(ADJUST_AMOUNT_MINUTES * 60)
+      },
+      onDecrement: () => {
+        if (timer) timer.adjustTime(-(ADJUST_AMOUNT_MINUTES * 60))
+      },
+      adjustAmount: ADJUST_AMOUNT_MINUTES,
+      isVisible: false,
+    })
+    adjustContainer.appendChild(adjustButtons)
   }
 }
 
