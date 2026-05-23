@@ -111,6 +111,7 @@ async function initTimerPage() {
   let todayFocusMinutes = 0
   let currentCategory: string | null = null
   let sessionStartTime: number | null = null
+  let isOnImmediateBreak = false
   if (statsContainer) {
     try {
       const todaySessions = await getTodaySessions()
@@ -424,6 +425,12 @@ async function initTimerPage() {
     }
     if (savedState.state !== 'idle' || savedState.remainingSeconds > 0) {
       timer.restoreState(savedState)
+      // If restoring an onBreak state, show the overlay
+      if (savedState.state === 'onBreak' && savedState.breakBookmark) {
+        isOnImmediateBreak = true
+        showBreakOverlay()
+        updateTimerAdjustButtonsVisibility(false)
+      }
     }
   }
 
@@ -485,6 +492,11 @@ async function initTimerPage() {
   if (skipBtn) {
     skipBtn.addEventListener('click', () => {
       if (!timer) return
+      if (isOnImmediateBreak) {
+        hideBreakOverlay()
+        isOnImmediateBreak = false
+        updateTimerAdjustButtonsVisibility(true)
+      }
       timer.skip()
       audioManager.stopAmbient()
     })
@@ -505,8 +517,6 @@ async function initTimerPage() {
     })
     adjustContainer.appendChild(adjustButtons)
   }
-
-  let isOnImmediateBreak = false
 
   const breakOverlayContainer = document.getElementById('break-overlay-container')
   if (breakOverlayContainer) {

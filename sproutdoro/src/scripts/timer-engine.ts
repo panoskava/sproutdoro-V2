@@ -191,9 +191,10 @@ export class Timer {
 
   adjustTime(deltaSeconds: number): void {
     if (this.state.state !== 'running' && this.state.state !== 'paused') return
-    this.state.remainingSeconds = Math.max(0, this.state.remainingSeconds + deltaSeconds)
     this.state.adjustmentOffset += deltaSeconds
-    this.state.totalSeconds += deltaSeconds > 0 ? deltaSeconds : 0
+    this.state.totalSeconds += deltaSeconds
+    if (this.state.totalSeconds < 1) this.state.totalSeconds = 1
+    this.state.remainingSeconds = Math.max(0, this.state.remainingSeconds + deltaSeconds)
     this.onUpdate({ ...this.state })
   }
 
