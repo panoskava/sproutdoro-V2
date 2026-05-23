@@ -29,6 +29,8 @@ interface TimerStatePersist {
   totalSeconds: number
   sessionCount: number
   lastTick: number | null
+  adjustmentOffset: number
+  modeAtAdjustmentStart: 'work' | 'shortBreak' | 'longBreak' | null
 }
 
 function saveTimerState(state: TimerStatePersist): void {
@@ -237,14 +239,18 @@ async function initTimerPage() {
     audioManager.stopAmbient()
     audioManager.playCompletion()
     if (mode === 'work') {
+      const timerState = timer?.getState()
+      const actualDuration = timerState
+        ? Math.round(((timerState.totalSeconds - (timerState.adjustmentOffset ?? 0)) / 60) * 10) / 10
+        : 0
       const session = {
         id: crypto.randomUUID(),
-        startTime: Date.now() - (timer?.getState().totalSeconds || 0) * 1000,
+        startTime: Date.now() - ((timerState?.totalSeconds || 0) * 1000),
         endTime: Date.now(),
-        duration: (timer?.getState().totalSeconds || 0) / 60,
+        duration: actualDuration > 0 ? actualDuration : (timerState?.totalSeconds || 0) / 60,
         type: 'work',
         plantId: null,
-        category: 'focus',
+        category: 'focus' as string,
         completed: true,
       } as import('../types').Session
 
@@ -336,6 +342,8 @@ async function initTimerPage() {
         ...state,
         state: state.state as 'idle' | 'running' | 'paused',
         lastTick: state.state === 'running' ? Date.now() : null,
+        adjustmentOffset: state.adjustmentOffset ?? 0,
+        modeAtAdjustmentStart: state.modeAtAdjustmentStart ?? null,
       })
     }
   }

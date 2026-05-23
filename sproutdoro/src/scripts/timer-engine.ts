@@ -6,6 +6,8 @@ export interface TimerState {
   remainingSeconds: number
   totalSeconds: number
   sessionCount: number
+  adjustmentOffset: number
+  modeAtAdjustmentStart: 'work' | 'shortBreak' | 'longBreak' | null
 }
 
 export class Timer {
@@ -34,6 +36,8 @@ export class Timer {
       remainingSeconds: totalSeconds,
       totalSeconds,
       sessionCount: 0,
+      adjustmentOffset: 0,
+      modeAtAdjustmentStart: null,
     }
   }
 
@@ -137,6 +141,14 @@ export class Timer {
     this.transitionToNextMode()
   }
 
+  adjustTime(deltaSeconds: number): void {
+    if (this.state.state !== 'running' && this.state.state !== 'paused') return
+    this.state.remainingSeconds = Math.max(0, this.state.remainingSeconds + deltaSeconds)
+    this.state.adjustmentOffset += deltaSeconds
+    this.state.totalSeconds += deltaSeconds > 0 ? deltaSeconds : 0
+    this.onUpdate({ ...this.state })
+  }
+
   getState(): TimerState {
     return { ...this.state }
   }
@@ -147,6 +159,8 @@ export class Timer {
     remainingSeconds: number
     totalSeconds: number
     sessionCount: number
+    adjustmentOffset?: number
+    modeAtAdjustmentStart?: 'work' | 'shortBreak' | 'longBreak' | null
   }): void {
     this.clearTimer()
     this.clearTransitionTimeout()
@@ -155,6 +169,8 @@ export class Timer {
     this.state.remainingSeconds = saved.remainingSeconds
     this.state.totalSeconds = saved.totalSeconds
     this.state.sessionCount = saved.sessionCount
+    this.state.adjustmentOffset = saved.adjustmentOffset ?? 0
+    this.state.modeAtAdjustmentStart = saved.modeAtAdjustmentStart ?? null
     if (saved.state === 'running') {
       this.state.state = 'running'
       this.intervalId = window.setInterval(() => this.tick(), 1000)
