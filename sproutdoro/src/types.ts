@@ -16,8 +16,16 @@ export interface Session {
   duration: number
   type: 'work' | 'shortBreak' | 'longBreak'
   plantId: string | null
-  category: string
+  category: string | null
   completed: boolean
+}
+
+export interface Category {
+  id: string
+  name: string
+  color: string
+  icon: string
+  createdAt: number
 }
 
 export type PlantRarity = 'common' | 'uncommon' | 'rare' | 'legendary'
@@ -65,6 +73,17 @@ export interface Insights {
     weekStart: string
     totalFocusMinutes: number
     plantsGrown: number
+  }>
+  categoryStats: Array<{
+    categoryId: string
+    categoryName: string
+    categoryColor: string
+    totalFocusMinutes: number
+    sessionCount: number
+    weeklyTrend: Array<{
+      weekStart: string
+      totalFocusMinutes: number
+    }>
   }>
   achievements: Achievement[]
   monthlyGoalHours: number

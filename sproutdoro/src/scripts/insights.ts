@@ -411,6 +411,7 @@ async function initInsightsPage(): Promise<void> {
       lastSessionDate: 0,
       dailyStats: [],
       weeklyStats: [],
+      categoryStats: [],
       achievements: [],
       monthlyGoalHours: 40,
     }
