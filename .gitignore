@@ -1,2 +1,95 @@
-.superpowers/
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm
+.yarn-integrity
+
+# Vite / Build
+dist/
+dist-ssr/
+*.local
 .vite/
+.cache/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.sublime-*
+
+# Logs
+logs/
+*.log
+lerna-debug.log*
+
+# Testing
+coverage/
+*.lcov
+.nyc_output
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Design reference / mockup files (user provided these for reference only)
+stitch_sproutdoro_pomodoro_companion/
+stitch_sproutdoro_pomodoro_companion*/
+stitch_sproutdoro_pomodoro_companion(2)/
+stitch_sproutdoro_pomodoro_companion\ 3/
+
+# Sproutdoro brainstorm session files
+.superpowers/
+
+# Temp files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# OS files
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Misc
+.lock-wscript
+.fusebox/
+.dynamodb/
+.tern-port
+.eslintcache
+.stylelintcache
+.parcel-cache
