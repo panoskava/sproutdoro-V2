@@ -2,6 +2,7 @@ import { NAV_ITEMS } from './nav-config'
 
 export function createMobileNav(currentPage: string): HTMLElement {
   const nav = document.createElement('nav')
+  nav.setAttribute('aria-label', 'Main navigation')
   nav.className =
     'flex md:hidden fixed bottom-0 left-0 right-0 glass-sage z-50 pb-safe'
 
@@ -24,6 +25,7 @@ export function createMobileNav(currentPage: string): HTMLElement {
     // FAB for Garden page
     if (isGarden && currentPage === 'garden') {
       a.href = './index.html'
+      a.setAttribute('aria-label', 'Start a new focus session')
       a.className =
         'relative -top-5 flex items-center justify-center w-14 h-14 rounded-full bg-primary text-on-primary shadow-lg shadow-primary/30 transition-all duration-200 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-1'
       a.innerHTML = `
