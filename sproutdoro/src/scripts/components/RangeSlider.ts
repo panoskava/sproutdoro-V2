@@ -17,9 +17,10 @@ export function createRangeSlider(props: RangeSliderProps): HTMLElement {
   const header = document.createElement('div')
   header.className = 'flex items-center justify-between'
 
-  const labelEl = document.createElement('span')
+  const labelEl = document.createElement('label')
   labelEl.className = 'font-label text-sm font-semibold text-on-surface'
   labelEl.textContent = label
+  labelEl.setAttribute('for', sliderId)
 
   const valueEl = document.createElement('span')
   valueEl.className = 'font-label text-sm text-on-surface/70 tabular-nums'
@@ -42,6 +43,7 @@ export function createRangeSlider(props: RangeSliderProps): HTMLElement {
   input.id = sliderId
 
   function getGradientPercent(val: number): number {
+    if (max <= min) return 50
     return ((val - min) / (max - min)) * 100
   }
 
