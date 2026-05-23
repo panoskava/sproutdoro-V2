@@ -212,12 +212,11 @@ function renderBarChart(dailyStats: Insights['dailyStats']): void {
   }
 }
 
-function renderPieChart(sessions: Session[]): void {
+function renderPieChart(workSessions: Session[]): void {
   const container = document.getElementById('pie-chart')
   const legendContainer = document.getElementById('pie-legend')
   if (!container || !legendContainer) return
 
-  const workSessions = sessions.filter((s) => s.completed && s.type === 'work')
   const categoryMap: Record<string, number> = {}
   for (const s of workSessions) {
     const cat = s.category || 'other'
@@ -257,7 +256,7 @@ function renderPieChart(sessions: Session[]): void {
   const circumference = 2 * Math.PI * radius
   let offset = 0
 
-  let svgContent = `<svg viewBox="0 0 192 192" class="w-full h-full -rotate-90">`
+  let svgContent = `<svg viewBox="0 0 192 192" class="w-full h-full -rotate-90" role="img" aria-label="Focus distribution pie chart">`
 
   for (const [cat, duration] of categories) {
     const pct = duration / total
@@ -311,12 +310,10 @@ function renderPieChart(sessions: Session[]): void {
 }
 
 function renderTotalFocus(
-  sessions: Session[],
+  workSessions: Session[],
+  totalMinutes: number,
   monthlyGoalHours: number
 ): void {
-  const totalMinutes = sessions
-    .filter((s) => s.completed && s.type === 'work')
-    .reduce((sum, s) => sum + s.duration, 0)
   const totalHours = Math.round((totalMinutes / 60) * 10) / 10
 
   const hoursEl = document.getElementById('total-hours')
@@ -433,10 +430,9 @@ async function initInsightsPage(): Promise<void> {
     sessions = []
   }
 
-  // Compute derived data
-  const totalFocusMinutes = sessions
-    .filter((s) => s.completed && s.type === 'work')
-    .reduce((sum, s) => sum + s.duration, 0)
+  // Compute derived data (filter once, reuse)
+  const workSessions = sessions.filter((s) => s.completed && s.type === 'work')
+  const totalFocusMinutes = workSessions.reduce((sum, s) => sum + s.duration, 0)
   const totalFocusHours = totalFocusMinutes / 60
   const level = computeGardenerLevel(totalFocusHours)
 
@@ -447,8 +443,8 @@ async function initInsightsPage(): Promise<void> {
   // Render sections
   renderStreakCard(insights)
   renderBarChart(insights.dailyStats)
-  renderPieChart(sessions)
-  renderTotalFocus(sessions, insights.monthlyGoalHours)
+  renderPieChart(workSessions)
+  renderTotalFocus(workSessions, totalFocusMinutes, insights.monthlyGoalHours)
 
   const achievements = computeAchievements(insights, plants, sessions)
   renderAchievements(achievements)
