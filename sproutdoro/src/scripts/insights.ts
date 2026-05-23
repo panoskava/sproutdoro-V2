@@ -117,30 +117,35 @@ function computeAchievements(
     let unlockedAt: number | null = null
     switch (def.id) {
       case 'first-sprout':
-        if (workSessions.length >= 1) unlockedAt = Date.now()
+        if (workSessions.length >= 1) unlockedAt = workSessions[0].startTime
         break
       case 'green-thumb':
-        if (plants.length >= 10) unlockedAt = Date.now()
+        if (plants.length >= 10) unlockedAt = plants[9].plantedAt
         break
       case 'streak-7':
-        if (insights.currentStreak >= 7 || insights.longestStreak >= 7)
-          unlockedAt = Date.now()
+        if (insights.currentStreak >= 7 || insights.longestStreak >= 7) {
+          unlockedAt = workSessions.length > 0 ? workSessions[0].startTime : Date.now()
+        }
         break
       case 'streak-30':
-        if (insights.currentStreak >= 30 || insights.longestStreak >= 30)
-          unlockedAt = Date.now()
+        if (insights.currentStreak >= 30 || insights.longestStreak >= 30) {
+          unlockedAt = workSessions.length > 0 ? workSessions[0].startTime : Date.now()
+        }
         break
       case 'deep-diver':
-        if (hasLongSession) unlockedAt = Date.now()
+        if (hasLongSession) {
+          const longSession = workSessions.find((s) => s.duration >= 60)
+          unlockedAt = longSession ? longSession.startTime : Date.now()
+        }
         break
       case 'collector':
-        if (hasAllRarities) unlockedAt = Date.now()
+        if (hasAllRarities) unlockedAt = Math.max(...plants.map((p) => p.plantedAt))
         break
       case 'legendary':
-        if (hasLegendary) unlockedAt = Date.now()
+        if (hasLegendary) unlockedAt = (plants.find((p) => p.rarity === 'legendary'))?.plantedAt ?? Date.now()
         break
       case 'century':
-        if (totalFocusHours >= 100) unlockedAt = Date.now()
+        if (totalFocusHours >= 100) unlockedAt = workSessions[workSessions.length - 1].startTime
         break
     }
     return { ...def, unlockedAt }
