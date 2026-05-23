@@ -8,6 +8,7 @@ import {
 } from './components/CircularProgress'
 import { getSettings, createSession, getTodaySessions } from './storage'
 import { Timer } from './timer-engine'
+import { AudioManager } from './audio'
 
 function formatTime(totalSeconds: number): { mm: string; ss: string } {
   const mins = Math.floor(totalSeconds / 60)
@@ -30,6 +31,17 @@ async function initTimerPage() {
     console.error('Failed to load settings:', err)
     alert('Unable to load timer settings. Please try refreshing the page.')
     return
+  }
+
+  const audioManager = new AudioManager()
+  audioManager.setGlobalVolume(settings.volume / 100)
+
+  // Preload sounds
+  const soundsToLoad = [settings.sound, 'completion', 'break']
+  for (const name of soundsToLoad) {
+    audioManager.loadSound(name, `/sounds/${name}.mp3`).catch((err) => {
+      console.warn(`Failed to preload sound "${name}":`, err)
+    })
   }
 
   // Render navs
@@ -184,6 +196,8 @@ async function initTimerPage() {
   }
 
   async function onTimerComplete(mode: string) {
+    audioManager.stopAmbient()
+    audioManager.playCompletion()
     if (mode === 'work') {
       const session = {
         id: crypto.randomUUID(),
@@ -264,8 +278,12 @@ async function initTimerPage() {
       const state = timer.getState()
       if (state.state === 'running') {
         timer.pause()
+        audioManager.stopAmbient()
       } else {
         timer.start()
+        if (state.mode === 'work') {
+          audioManager.startAmbient(settings.sound)
+        }
       }
     })
   }
@@ -274,6 +292,7 @@ async function initTimerPage() {
     resetBtn.addEventListener('click', () => {
       if (!timer) return
       timer.reset()
+      audioManager.stopAmbient()
     })
   }
 
@@ -281,6 +300,7 @@ async function initTimerPage() {
     skipBtn.addEventListener('click', () => {
       if (!timer) return
       timer.skip()
+      audioManager.stopAmbient()
     })
   }
 }
