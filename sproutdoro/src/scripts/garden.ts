@@ -5,7 +5,7 @@ import { createPlantCard } from './components/PlantCard'
 import { createStatCard } from './components/StatCard'
 import { createPlantingPlanModal } from './components/PlantingPlanModal'
 import { getPlantDefinition } from './plant-definitions'
-import { getAllPlants, createPlant, getSessions } from './storage'
+import { getAllPlants, createPlant } from './storage'
 import { applyTheme } from './theme'
 import type { Plant } from '../types'
 
