@@ -6,7 +6,7 @@ import {
   createCircularProgress,
   updateCircularProgress,
 } from './components/CircularProgress'
-import { getSettings, createSession, getTodaySessions, getCategories } from './storage'
+import { getSettings, createSession, getTodaySessions, getCategories, getAllPlants, updatePlant } from './storage'
 import { createCategoryPillRow, updateCategoryPillRow } from './components/CategoryPill'
 import type { Category } from '../types'
 import { Timer } from './timer-engine'
@@ -14,6 +14,7 @@ import { AudioManager } from './audio'
 import { applyTheme } from './theme'
 import { createTimerAdjustButtons, updateTimerAdjustButtonsVisibility } from './components/TimerAdjustButtons'
 import { createBreakOverlay, showBreakOverlay, hideBreakOverlay, updateBreakOverlay } from './components/BreakOverlay'
+import { getPlantDefinition } from './plant-definitions'
 
 function formatTime(totalSeconds: number): { mm: string; ss: string } {
   const mins = Math.floor(totalSeconds / 60)
@@ -109,6 +110,7 @@ async function initTimerPage() {
   const statsContainer = document.getElementById('stats-row')
   let todayFocusMinutes = 0
   let currentCategory: string | null = null
+  let sessionStartTime: number | null = null
   if (statsContainer) {
     try {
       const todaySessions = await getTodaySessions()
@@ -316,7 +318,7 @@ async function initTimerPage() {
         : 0
       const session = {
         id: crypto.randomUUID(),
-        startTime: Date.now() - ((timerState?.totalSeconds || 0) * 1000),
+        startTime: sessionStartTime ?? (Date.now() - ((timerState?.totalSeconds || 0) * 1000)),
         endTime: Date.now(),
         duration: actualDuration > 0 ? actualDuration : (timerState?.totalSeconds || 0) / 60,
         type: 'work',
@@ -329,6 +331,29 @@ async function initTimerPage() {
         await createSession(session)
       } catch (err) {
         console.error('Failed to save session:', err)
+      }
+
+      // Update active plants with focus minutes
+      try {
+        const allPlants = await getAllPlants()
+        for (const plant of allPlants) {
+          if (!plant.sessionIds) plant.sessionIds = []
+          plant.sessionIds.push(session.id)
+          plant.totalFocusMinutes += session.duration
+          const definition = getPlantDefinition(plant.type)
+          if (definition) {
+            const progressRatio = plant.totalFocusMinutes / definition.focusMinutesRequired
+            if (progressRatio >= 1 && plant.level < 5) {
+              plant.level = Math.min(5, Math.floor(progressRatio) + 1) as 1 | 2 | 3 | 4 | 5
+            }
+            if (plant.level >= 5) {
+              plant.isMasterpiece = true
+            }
+          }
+          await updatePlant(plant)
+        }
+      } catch (err) {
+        console.error('Failed to update plants:', err)
       }
 
       // Update Today's Focus stat
@@ -432,6 +457,9 @@ async function initTimerPage() {
         timer.pause()
         audioManager.stopAmbient()
       } else {
+        if (state.mode === 'work' && (state.state === 'idle' || state.state === 'complete')) {
+          sessionStartTime = Date.now()
+        }
         timer.start()
         if (state.mode === 'work') {
           audioManager.startAmbient(settings.sound)
