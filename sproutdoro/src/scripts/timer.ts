@@ -13,6 +13,7 @@ import { Timer } from './timer-engine'
 import { AudioManager } from './audio'
 import { applyTheme } from './theme'
 import { createTimerAdjustButtons, updateTimerAdjustButtonsVisibility } from './components/TimerAdjustButtons'
+import { createBreakOverlay, showBreakOverlay, hideBreakOverlay, updateBreakOverlay } from './components/BreakOverlay'
 
 function formatTime(totalSeconds: number): { mm: string; ss: string } {
   const mins = Math.floor(totalSeconds / 60)
@@ -272,10 +273,41 @@ async function initTimerPage() {
         }
       }
     }
+
+    const immediateBreakBtn = document.getElementById('btn-immediate-break')
+    if (immediateBreakBtn) {
+      if (state.mode === 'work' && (state.state === 'running' || state.state === 'paused')) {
+        immediateBreakBtn.classList.remove('hidden')
+        immediateBreakBtn.classList.add('md:flex')
+      } else {
+        immediateBreakBtn.classList.add('hidden')
+        immediateBreakBtn.classList.remove('md:flex')
+      }
+    }
+
+    if (state.state === 'onBreak') {
+      updateBreakOverlay(state.remainingSeconds, state.totalSeconds)
+    }
   }
 
   async function onTimerComplete(mode: string) {
     audioManager.stopAmbient()
+
+    if (mode === 'immediateBreak') {
+      if (settings.notifications && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification('Sproutdoro', {
+          body: 'Break over! Resuming focus session.',
+          icon: '/favicon.svg',
+        })
+      }
+      hideBreakOverlay()
+      timer?.resumeFromBreak()
+      isOnImmediateBreak = false
+      updateTimerAdjustButtonsVisibility(true)
+      clearTimerState()
+      return
+    }
+
     audioManager.playCompletion()
     if (mode === 'work') {
       const timerState = timer?.getState()
@@ -411,6 +443,10 @@ async function initTimerPage() {
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
       if (!timer) return
+      if (isOnImmediateBreak) {
+        hideBreakOverlay()
+        isOnImmediateBreak = false
+      }
       timer.reset()
       audioManager.stopAmbient()
       clearTimerState()
@@ -441,6 +477,44 @@ async function initTimerPage() {
     })
     adjustContainer.appendChild(adjustButtons)
   }
-}
+
+  let isOnImmediateBreak = false
+
+  const breakOverlayContainer = document.getElementById('break-overlay-container')
+  if (breakOverlayContainer) {
+    const breakDurationSec = settings.shortBreakDuration * 60
+    const breakOverlay = createBreakOverlay({
+      breakDuration: breakDurationSec,
+      onBreakComplete: () => {
+        if (!timer) return
+        hideBreakOverlay()
+        timer.resumeFromBreak()
+        isOnImmediateBreak = false
+        updateTimerAdjustButtonsVisibility(true)
+      },
+      onCancelBreak: () => {
+        if (!timer) return
+        hideBreakOverlay()
+        timer.resumeFromBreak()
+        isOnImmediateBreak = false
+        updateTimerAdjustButtonsVisibility(true)
+      },
+    })
+    breakOverlayContainer.appendChild(breakOverlay)
+  }
+
+  const immediateBreakBtn = document.getElementById('btn-immediate-break')
+  if (immediateBreakBtn) {
+    immediateBreakBtn.addEventListener('click', () => {
+      if (!timer) return
+      const state = timer.getState()
+      if (state.mode !== 'work' || (state.state !== 'running' && state.state !== 'paused')) return
+      isOnImmediateBreak = true
+      const breakDurationSec = settings.shortBreakDuration * 60
+      timer.pauseForBreak(breakDurationSec)
+      showBreakOverlay()
+      updateTimerAdjustButtonsVisibility(false)
+    })
+  }
 
 initTimerPage().catch(console.error)

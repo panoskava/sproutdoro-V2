@@ -156,6 +156,15 @@
                 skip_next
               </span>
             </button>
+            <!-- Immediate Break button (visible during active work session) -->
+            <button
+              id="btn-immediate-break"
+              class="hidden md:flex items-center gap-2 mt-3 px-5 py-2.5 rounded-2xl font-label text-sm font-semibold text-on-surface/70 hover:text-on-surface bg-surface-container-high/50 hover:bg-surface-container-high transition-all duration-200"
+              title="Take an immediate break"
+            >
+              <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 0, 'wght' 400;">coffee</span>
+              Break
+            </button>
           </div>
           <!-- Timer adjust buttons (visible during active session) -->
           <div id="timer-adjust-container" class="flex items-center justify-center mt-2 transition-opacity duration-300 opacity-0 pointer-events-none">
@@ -173,6 +182,7 @@
     <!-- MobileNav container (injected by JS) -->
     <div id="mobile-nav"></div>
 
+    <div id="break-overlay-container"></div>
     <script type="module" src="/src/scripts/timer.ts"></script>
   </body>
 </html>
