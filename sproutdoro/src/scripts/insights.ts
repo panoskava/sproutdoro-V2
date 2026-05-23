@@ -1,0 +1,448 @@
+import '../styles/main.css'
+import { createSideNav } from './components/SideNav'
+import { createMobileNav } from './components/MobileNav'
+import { getInsights, getAllPlants, getSessions } from './storage'
+import type { Insights, Plant, Session, Achievement } from '../types'
+
+/* ------------------------------------------------------------------ */
+/* Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+function toISODate(ts: number): string {
+  const d = new Date(ts)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function getLast7Days(): string[] {
+  const days: string[] = []
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000)
+    days.push(toISODate(d.getTime()))
+  }
+  return days
+}
+
+function getDayLabel(dateStr: string): string {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const d = new Date(dateStr + 'T00:00:00')
+  return days[d.getDay()]
+}
+
+function computeGardenerLevel(totalFocusHours: number): number {
+  return Math.floor(totalFocusHours / 5) + 1
+}
+
+function computeAchievements(
+  insights: Insights,
+  plants: Plant[],
+  sessions: Session[]
+): Achievement[] {
+  const workSessions = sessions.filter((s) => s.completed && s.type === 'work')
+  const totalFocusHours =
+    workSessions.reduce((sum, s) => sum + s.duration, 0) / 60
+
+  const hasLongSession = workSessions.some((s) => s.duration >= 60)
+  const rarities = new Set(plants.map((p) => p.rarity))
+  const hasAllRarities = ['common', 'uncommon', 'rare', 'legendary'].every(
+    (r) => rarities.has(r as Plant['rarity'])
+  )
+  const hasLegendary = plants.some((p) => p.rarity === 'legendary')
+
+  const defs: Omit<Achievement, 'unlockedAt'>[] = [
+    {
+      id: 'first-sprout',
+      name: 'First Sprout',
+      description: 'Complete your first focus session',
+      icon: 'sprout',
+      condition: 'Complete 1 session',
+    },
+    {
+      id: 'green-thumb',
+      name: 'Green Thumb',
+      description: 'Grow 10 plants in your garden',
+      icon: 'potted_plant',
+      condition: 'Grow 10 plants',
+    },
+    {
+      id: 'streak-7',
+      name: 'Week Warrior',
+      description: 'Maintain a 7-day focus streak',
+      icon: 'local_fire_department',
+      condition: '7-day streak',
+    },
+    {
+      id: 'streak-30',
+      name: 'Monthly Master',
+      description: 'Maintain a 30-day focus streak',
+      icon: 'auto_awesome',
+      condition: '30-day streak',
+    },
+    {
+      id: 'deep-diver',
+      name: 'Deep Diver',
+      description: 'Complete a 60-minute focus session',
+      icon: 'psychology',
+      condition: '1 session >= 60 min',
+    },
+    {
+      id: 'collector',
+      name: 'Collector',
+      description: 'Own one plant of each rarity',
+      icon: 'collections',
+      condition: '1 of each rarity',
+    },
+    {
+      id: 'legendary',
+      name: 'Legendary',
+      description: 'Grow a legendary plant',
+      icon: 'diamond',
+      condition: 'Grow a legendary plant',
+    },
+    {
+      id: 'century',
+      name: 'Century Club',
+      description: 'Accumulate 100 hours of focus time',
+      icon: 'schedule',
+      condition: '100 total focus hours',
+    },
+  ]
+
+  return defs.map((def) => {
+    let unlockedAt: number | null = null
+    switch (def.id) {
+      case 'first-sprout':
+        if (workSessions.length >= 1) unlockedAt = Date.now()
+        break
+      case 'green-thumb':
+        if (plants.length >= 10) unlockedAt = Date.now()
+        break
+      case 'streak-7':
+        if (insights.currentStreak >= 7 || insights.longestStreak >= 7)
+          unlockedAt = Date.now()
+        break
+      case 'streak-30':
+        if (insights.currentStreak >= 30 || insights.longestStreak >= 30)
+          unlockedAt = Date.now()
+        break
+      case 'deep-diver':
+        if (hasLongSession) unlockedAt = Date.now()
+        break
+      case 'collector':
+        if (hasAllRarities) unlockedAt = Date.now()
+        break
+      case 'legendary':
+        if (hasLegendary) unlockedAt = Date.now()
+        break
+      case 'century':
+        if (totalFocusHours >= 100) unlockedAt = Date.now()
+        break
+    }
+    return { ...def, unlockedAt }
+  })
+}
+
+/* ------------------------------------------------------------------ */
+/* Renderers                                                          */
+/* ------------------------------------------------------------------ */
+
+function renderStreakCard(insights: Insights): void {
+  const numberEl = document.getElementById('streak-number')
+  const textEl = document.getElementById('streak-text')
+  if (!numberEl || !textEl) return
+
+  numberEl.textContent = String(insights.currentStreak)
+
+  if (insights.currentStreak === 0) {
+    textEl.textContent = 'Start focusing today to build your streak!'
+  } else if (insights.currentStreak < 3) {
+    textEl.textContent = 'Great start! Keep the momentum going.'
+  } else if (insights.currentStreak < 7) {
+    textEl.textContent = 'You are on fire! Consistency is key.'
+  } else {
+    textEl.textContent = 'Incredible discipline! You are a true gardener.'
+  }
+}
+
+function renderBarChart(dailyStats: Insights['dailyStats']): void {
+  const container = document.getElementById('bar-chart')
+  if (!container) return
+
+  const last7Days = getLast7Days()
+  const maxPlants = Math.max(1, ...dailyStats.map((d) => d.plantsGrown))
+  const todayKey = toISODate(Date.now())
+
+  container.innerHTML = ''
+
+  for (const dateStr of last7Days) {
+    const stat = dailyStats.find((d) => d.date === dateStr)
+    const plantsGrown = stat?.plantsGrown ?? 0
+    const heightPercent = (plantsGrown / maxPlants) * 100
+    const isToday = dateStr === todayKey
+
+    const barWrap = document.createElement('div')
+    barWrap.className = 'flex-1 flex flex-col items-center justify-end gap-2'
+
+    const bar = document.createElement('div')
+    bar.className = `w-full max-w-[40px] rounded-t-full transition-all duration-500 ${
+      isToday ? 'bg-primary' : 'bg-primary/40'
+    }`
+    bar.style.height = `${Math.max(heightPercent, 4)}%`
+    bar.title = `${plantsGrown} plant${plantsGrown === 1 ? '' : 's'}`
+
+    const label = document.createElement('span')
+    label.className = `font-label text-[10px] uppercase tracking-wider ${
+      isToday ? 'text-primary font-semibold' : 'text-on-surface/50'
+    }`
+    label.textContent = getDayLabel(dateStr)
+
+    barWrap.appendChild(bar)
+    barWrap.appendChild(label)
+    container.appendChild(barWrap)
+  }
+}
+
+function renderPieChart(sessions: Session[]): void {
+  const container = document.getElementById('pie-chart')
+  const legendContainer = document.getElementById('pie-legend')
+  if (!container || !legendContainer) return
+
+  const workSessions = sessions.filter((s) => s.completed && s.type === 'work')
+  const categoryMap: Record<string, number> = {}
+  for (const s of workSessions) {
+    const cat = s.category || 'other'
+    categoryMap[cat] = (categoryMap[cat] || 0) + s.duration
+  }
+
+  const categoryColors: Record<string, string> = {
+    'deep-work': '#516233',
+    reading: '#934a29',
+    planning: '#fd9e77',
+    creative: '#3f5d87',
+    learning: '#5876a1',
+    other: '#76786c',
+  }
+
+  const categoryLabels: Record<string, string> = {
+    'deep-work': 'Deep Work',
+    reading: 'Reading',
+    planning: 'Planning',
+    creative: 'Creative',
+    learning: 'Learning',
+    other: 'Other',
+  }
+
+  const categories = Object.entries(categoryMap)
+  const total = categories.reduce((sum, [, duration]) => sum + duration, 0)
+
+  if (total === 0) {
+    container.innerHTML =
+      '<div class="flex items-center justify-center w-full h-full text-on-surface/40 font-body text-sm">No data yet</div>'
+    legendContainer.innerHTML = ''
+    return
+  }
+
+  const radius = 80
+  const center = 96
+  const circumference = 2 * Math.PI * radius
+  let offset = 0
+
+  let svgContent = `<svg viewBox="0 0 192 192" class="w-full h-full -rotate-90">`
+
+  for (const [cat, duration] of categories) {
+    const pct = duration / total
+    const dashArray = `${pct * circumference} ${circumference}`
+    const color = categoryColors[cat] || '#76786c'
+
+    svgContent += `
+      <circle
+        cx="${center}" cy="${center}" r="${radius}"
+        fill="none"
+        stroke="${color}"
+        stroke-width="24"
+        stroke-dasharray="${dashArray}"
+        stroke-dashoffset="${-offset}"
+        stroke-linecap="round"
+      />
+    `
+    offset += pct * circumference
+  }
+
+  svgContent += `</svg>`
+
+  const totalHours = Math.round((total / 60) * 10) / 10
+  const centerOverlay = document.createElement('div')
+  centerOverlay.className =
+    'absolute inset-0 flex flex-col items-center justify-center pointer-events-none'
+  centerOverlay.innerHTML = `
+    <span class="font-headline text-2xl font-bold text-on-surface">${totalHours}</span>
+    <span class="font-label text-[10px] uppercase tracking-wider text-on-surface/50">Total hrs</span>
+  `
+
+  container.innerHTML = svgContent
+  container.appendChild(centerOverlay)
+
+  legendContainer.innerHTML = ''
+  for (const [cat, duration] of categories) {
+    const pct = Math.round((duration / total) * 100)
+    const color = categoryColors[cat] || '#76786c'
+    const label = categoryLabels[cat] || cat
+
+    const item = document.createElement('div')
+    item.className = 'flex items-center gap-2'
+    item.innerHTML = `
+      <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${color}"></span>
+      <span class="font-label text-xs text-on-surface/70">${label}</span>
+      <span class="font-label text-xs font-semibold text-on-surface ml-auto">${pct}%</span>
+    `
+    legendContainer.appendChild(item)
+  }
+}
+
+function renderTotalFocus(
+  sessions: Session[],
+  monthlyGoalHours: number
+): void {
+  const totalMinutes = sessions
+    .filter((s) => s.completed && s.type === 'work')
+    .reduce((sum, s) => sum + s.duration, 0)
+  const totalHours = Math.round((totalMinutes / 60) * 10) / 10
+
+  const hoursEl = document.getElementById('total-hours')
+  const percentEl = document.getElementById('goal-percent')
+  const barEl = document.getElementById('goal-bar')
+  const textEl = document.getElementById('goal-text')
+
+  if (hoursEl) hoursEl.textContent = String(totalHours)
+
+  const pct = Math.min(100, Math.round((totalHours / monthlyGoalHours) * 100))
+  if (percentEl) percentEl.textContent = `${pct}%`
+  if (barEl) barEl.style.width = `${pct}%`
+  if (textEl) {
+    textEl.textContent = `${totalHours} of ${monthlyGoalHours} hours`
+  }
+}
+
+function renderAchievements(achievements: Achievement[]): void {
+  const container = document.getElementById('achievements-grid')
+  if (!container) return
+
+  container.innerHTML = ''
+
+  for (const ach of achievements) {
+    const isEarned = ach.unlockedAt !== null
+
+    const card = document.createElement('div')
+    card.className = `flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200 ${
+      isEarned
+        ? 'bg-primary-container/10 hover:bg-primary-container/20'
+        : 'bg-surface-container-high/50 opacity-60 grayscale'
+    }`
+
+    const iconWrap = document.createElement('div')
+    iconWrap.className = `w-12 h-12 rounded-full flex items-center justify-center ${
+      isEarned ? 'bg-primary/10' : 'bg-surface-container-high'
+    }`
+
+    const icon = document.createElement('span')
+    icon.className = 'material-symbols-outlined text-2xl'
+    icon.style.color = isEarned ? '#516233' : '#76786c'
+    icon.style.fontVariationSettings = "'FILL' 1, 'wght' 600"
+    icon.textContent = ach.icon
+
+    iconWrap.appendChild(icon)
+
+    const name = document.createElement('span')
+    name.className = `font-label text-xs font-semibold text-center ${
+      isEarned ? 'text-on-surface' : 'text-on-surface/50'
+    }`
+    name.textContent = ach.name
+
+    const desc = document.createElement('span')
+    desc.className =
+      'font-body text-[10px] text-on-surface/50 text-center leading-tight'
+    desc.textContent = ach.condition
+
+    card.appendChild(iconWrap)
+    card.appendChild(name)
+    card.appendChild(desc)
+    container.appendChild(card)
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Init                                                               */
+/* ------------------------------------------------------------------ */
+
+async function initInsightsPage(): Promise<void> {
+  // Render navs
+  const sideNavContainer = document.getElementById('side-nav')
+  if (sideNavContainer) {
+    sideNavContainer.appendChild(createSideNav('insights'))
+  }
+
+  const mobileNavContainer = document.getElementById('mobile-nav')
+  if (mobileNavContainer) {
+    mobileNavContainer.appendChild(createMobileNav('insights'))
+  }
+
+  // Load data
+  let insights: Insights
+  let plants: Plant[]
+  let sessions: Session[]
+
+  try {
+    insights = await getInsights()
+  } catch (err) {
+    console.error('Failed to load insights:', err)
+    insights = {
+      currentStreak: 0,
+      longestStreak: 0,
+      lastSessionDate: 0,
+      dailyStats: [],
+      weeklyStats: [],
+      achievements: [],
+      monthlyGoalHours: 40,
+    }
+  }
+
+  try {
+    plants = await getAllPlants()
+  } catch (err) {
+    console.error('Failed to load plants:', err)
+    plants = []
+  }
+
+  try {
+    sessions = await getSessions()
+  } catch (err) {
+    console.error('Failed to load sessions:', err)
+    sessions = []
+  }
+
+  // Compute derived data
+  const totalFocusMinutes = sessions
+    .filter((s) => s.completed && s.type === 'work')
+    .reduce((sum, s) => sum + s.duration, 0)
+  const totalFocusHours = totalFocusMinutes / 60
+  const level = computeGardenerLevel(totalFocusHours)
+
+  // Update level badge
+  const levelEl = document.getElementById('gardener-level')
+  if (levelEl) levelEl.textContent = String(level)
+
+  // Render sections
+  renderStreakCard(insights)
+  renderBarChart(insights.dailyStats)
+  renderPieChart(sessions)
+  renderTotalFocus(sessions, insights.monthlyGoalHours)
+
+  const achievements = computeAchievements(insights, plants, sessions)
+  renderAchievements(achievements)
+}
+
+initInsightsPage().catch(console.error)
