@@ -462,7 +462,7 @@ async function initTimerPage() {
     })
   }
 
-  const ADJUST_AMOUNT_MINUTES = 5
+  const ADJUST_AMOUNT_MINUTES = settings.timerAdjustMinutes || 5
   const adjustContainer = document.getElementById('timer-adjust-container')
   if (adjustContainer) {
     const adjustButtons = createTimerAdjustButtons({

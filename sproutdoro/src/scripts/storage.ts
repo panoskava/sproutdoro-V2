@@ -13,6 +13,7 @@ export const DEFAULT_SETTINGS: Settings = {
   volume: 50,
   autoStartBreaks: true,
   notifications: true,
+  timerAdjustMinutes: 5,
 }
 
 interface SproutdoroDB extends DBSchema {

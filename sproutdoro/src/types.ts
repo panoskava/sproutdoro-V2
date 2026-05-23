@@ -7,6 +7,7 @@ export interface Settings {
   volume: number
   autoStartBreaks: boolean
   notifications: boolean
+  timerAdjustMinutes: number
 }
 
 export interface Session {

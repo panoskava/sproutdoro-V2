@@ -109,6 +109,24 @@ async function initSettingsPage() {
     )
   }
 
+  const adjustSliderContainer = document.getElementById('timer-adjust-setting')
+  if (adjustSliderContainer) {
+    adjustSliderContainer.appendChild(
+      createRangeSlider({
+        label: 'Adjust Amount',
+        min: 1,
+        max: 15,
+        value: settings.timerAdjustMinutes,
+        unit: ' min',
+        accentColor: '#76786c',
+        onChange: async (value) => {
+          settings.timerAdjustMinutes = value
+          await persistSettings()
+        },
+      })
+    )
+  }
+
   // Appearance
   const appearanceContainer = document.getElementById('appearance-toggle')
   if (appearanceContainer) {
