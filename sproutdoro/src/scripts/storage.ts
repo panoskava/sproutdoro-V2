@@ -90,8 +90,13 @@ export async function getSettings(): Promise<Settings> {
 }
 
 export async function saveSettings(settings: Settings): Promise<void> {
-  const db = await getDB()
-  await db.put('settings', { ...settings, id: 'default' })
+  try {
+    const db = await getDB()
+    await db.put('settings', { ...settings, id: 'default' })
+  } catch (err) {
+    console.error('saveSettings failed:', err)
+    throw err
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -99,8 +104,13 @@ export async function saveSettings(settings: Settings): Promise<void> {
 /* ------------------------------------------------------------------ */
 
 export async function createSession(session: Session): Promise<void> {
-  const db = await getDB()
-  await db.put('sessions', session)
+  try {
+    const db = await getDB()
+    await db.put('sessions', session)
+  } catch (err) {
+    console.error('createSession failed:', err)
+    throw err
+  }
 }
 
 export async function getSessions(
@@ -110,6 +120,9 @@ export async function getSessions(
   try {
     const db = await getDB()
     if (startDate !== undefined || endDate !== undefined) {
+      if (startDate && endDate && startDate > endDate) {
+        return []
+      }
       const tx = db.transaction('sessions')
       const index = tx.store.index('by-date')
       const startTime = startDate?.getTime()
@@ -154,8 +167,13 @@ export async function getSessionById(id: string): Promise<Session | undefined> {
 /* ------------------------------------------------------------------ */
 
 export async function createPlant(plant: Plant): Promise<void> {
-  const db = await getDB()
-  await db.put('plants', plant)
+  try {
+    const db = await getDB()
+    await db.put('plants', plant)
+  } catch (err) {
+    console.error('createPlant failed:', err)
+    throw err
+  }
 }
 
 export async function getAllPlants(): Promise<Plant[]> {
@@ -179,8 +197,13 @@ export async function getPlantById(id: string): Promise<Plant | undefined> {
 }
 
 export async function updatePlant(plant: Plant): Promise<void> {
-  const db = await getDB()
-  await db.put('plants', plant)
+  try {
+    const db = await getDB()
+    await db.put('plants', plant)
+  } catch (err) {
+    console.error('updatePlant failed:', err)
+    throw err
+  }
 }
 
 export async function getFeaturedPlant(): Promise<Plant | undefined> {
@@ -346,6 +369,11 @@ export async function getInsights(): Promise<Insights> {
 }
 
 export async function updateInsights(insights: Insights): Promise<void> {
-  const db = await getDB()
-  await db.put('insights', { ...insights, id: 'default' })
+  try {
+    const db = await getDB()
+    await db.put('insights', { ...insights, id: 'default' })
+  } catch (err) {
+    console.error('updateInsights failed:', err)
+    throw err
+  }
 }

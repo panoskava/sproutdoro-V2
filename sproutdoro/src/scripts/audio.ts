@@ -11,7 +11,7 @@ export class AudioManager {
   private ambientGains: GainNode[] = []
 
   loadSound(name: string, url: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const audio = new Audio(url)
       audio.addEventListener(
         'canplaythrough',
@@ -23,7 +23,9 @@ export class AudioManager {
       )
       audio.addEventListener(
         'error',
-        () => reject(new Error(`Failed to load sound: ${url}`)),
+        () => {
+          resolve()
+        },
         { once: true }
       )
       audio.load()
@@ -84,7 +86,7 @@ export class AudioManager {
     }
 
     if (this.ambientIntervalId !== null) {
-      window.clearInterval(this.ambientIntervalId)
+      window.clearTimeout(this.ambientIntervalId)
       this.ambientIntervalId = null
     }
 
@@ -107,11 +109,13 @@ export class AudioManager {
     if (this.ambientAudio) {
       this.ambientAudio.volume = this.isMuted ? 0 : 0.3 * this.globalVolume
     }
-    for (const gain of this.ambientGains) {
-      gain.gain.setValueAtTime(
-        this.isMuted ? 0 : 0.15 * this.globalVolume,
-        this.getAudioContext().currentTime
-      )
+    if (this.ambientGains.length > 0) {
+      for (const gain of this.ambientGains) {
+        gain.gain.setValueAtTime(
+          this.isMuted ? 0 : 0.15 * this.globalVolume,
+          this.getAudioContext().currentTime
+        )
+      }
     }
   }
 
@@ -120,8 +124,10 @@ export class AudioManager {
     if (this.ambientAudio) {
       this.ambientAudio.volume = 0
     }
-    for (const gain of this.ambientGains) {
-      gain.gain.setValueAtTime(0, this.getAudioContext().currentTime)
+    if (this.ambientGains.length > 0) {
+      for (const gain of this.ambientGains) {
+        gain.gain.setValueAtTime(0, this.getAudioContext().currentTime)
+      }
     }
   }
 
@@ -130,11 +136,13 @@ export class AudioManager {
     if (this.ambientAudio) {
       this.ambientAudio.volume = 0.3 * this.globalVolume
     }
-    for (const gain of this.ambientGains) {
-      gain.gain.setValueAtTime(
-        0.15 * this.globalVolume,
-        this.getAudioContext().currentTime
-      )
+    if (this.ambientGains.length > 0) {
+      for (const gain of this.ambientGains) {
+        gain.gain.setValueAtTime(
+          0.15 * this.globalVolume,
+          this.getAudioContext().currentTime
+        )
+      }
     }
   }
 
@@ -218,13 +226,20 @@ export class AudioManager {
         gain.connect(ctx.destination)
         osc.start()
         osc.stop(ctx.currentTime + duration)
+
+        this.ambientNodes.push(osc)
+        this.ambientGains.push(gain)
       }
 
       playChime()
-      this.ambientIntervalId = window.setInterval(
-        playChime,
-        3000 + Math.random() * 4000
-      )
+      const scheduleNext = () => {
+        const delay = 3000 + Math.random() * 4000
+        this.ambientIntervalId = window.setTimeout(() => {
+          playChime()
+          scheduleNext()
+        }, delay)
+      }
+      scheduleNext()
     } else if (soundName === 'birdsong') {
       const playChirp = () => {
         const osc = ctx.createOscillator()
@@ -245,12 +260,19 @@ export class AudioManager {
         gain.connect(ctx.destination)
         osc.start()
         osc.stop(ctx.currentTime + 0.2)
+
+        this.ambientNodes.push(osc)
+        this.ambientGains.push(gain)
       }
 
-      playChirp()
-      this.ambientIntervalId = window.setInterval(() => {
-        if (Math.random() > 0.3) playChirp()
-      }, 2000 + Math.random() * 3000)
+      const scheduleNext = () => {
+        const delay = 2000 + Math.random() * 3000
+        this.ambientIntervalId = window.setTimeout(() => {
+          if (Math.random() > 0.3) playChirp()
+          scheduleNext()
+        }, delay)
+      }
+      scheduleNext()
     }
   }
 }

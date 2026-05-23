@@ -12,6 +12,8 @@ export function createSoundCard(props: SoundCardProps): HTMLElement {
 
   const card = document.createElement('button')
   card.type = 'button'
+  card.setAttribute('aria-pressed', String(selected))
+  card.setAttribute('aria-label', `${name}: ${description}`)
   card.className =
     'flex flex-col items-center gap-3 p-4 rounded-2xl border transition-all duration-200 text-center sound-card'
 

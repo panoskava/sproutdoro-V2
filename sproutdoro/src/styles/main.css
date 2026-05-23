@@ -12,6 +12,11 @@
     color: #1c1c16;
     background-color: #fdf9ef;
   }
+
+  .dark body {
+    color: #e6e1d6;
+    background-color: #1a1c16;
+  }
   
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Plus Jakarta Sans', sans-serif;

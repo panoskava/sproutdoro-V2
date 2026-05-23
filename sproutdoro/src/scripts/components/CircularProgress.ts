@@ -20,7 +20,7 @@ export function createCircularProgress(props: CircularProgressProps): SVGSVGElem
   } = props
 
   const center = size / 2
-  const radius = (size - strokeWidth) / 2
+  const radius = Math.max(1, (size - strokeWidth) / 2)
   const circumference = 2 * Math.PI * radius
   const clampedProgress = Math.max(0, Math.min(1, progress))
   const dashoffset = circumference * (1 - clampedProgress)
@@ -109,7 +109,7 @@ export function updateCircularProgress(
 ): void {
   const { size, strokeWidth } = props
   const center = size / 2
-  const radius = (size - strokeWidth) / 2
+  const radius = Math.max(1, (size - strokeWidth) / 2)
   const circumference = 2 * Math.PI * radius
   const clampedProgress = Math.max(0, Math.min(1, progress))
   const dashoffset = circumference * (1 - clampedProgress)

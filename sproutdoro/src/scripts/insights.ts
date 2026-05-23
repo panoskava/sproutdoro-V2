@@ -2,6 +2,7 @@ import '../styles/main.css'
 import { createSideNav } from './components/SideNav'
 import { createMobileNav } from './components/MobileNav'
 import { getInsights, getAllPlants, getSessions } from './storage'
+import { applyTheme } from './theme'
 import type { Insights, Plant, Session, Achievement } from '../types'
 
 /* ------------------------------------------------------------------ */
@@ -116,30 +117,35 @@ function computeAchievements(
     let unlockedAt: number | null = null
     switch (def.id) {
       case 'first-sprout':
-        if (workSessions.length >= 1) unlockedAt = Date.now()
+        if (workSessions.length >= 1) unlockedAt = workSessions[0].startTime
         break
       case 'green-thumb':
-        if (plants.length >= 10) unlockedAt = Date.now()
+        if (plants.length >= 10) unlockedAt = plants[9].plantedAt
         break
       case 'streak-7':
-        if (insights.currentStreak >= 7 || insights.longestStreak >= 7)
-          unlockedAt = Date.now()
+        if (insights.currentStreak >= 7 || insights.longestStreak >= 7) {
+          unlockedAt = workSessions.length > 0 ? workSessions[0].startTime : Date.now()
+        }
         break
       case 'streak-30':
-        if (insights.currentStreak >= 30 || insights.longestStreak >= 30)
-          unlockedAt = Date.now()
+        if (insights.currentStreak >= 30 || insights.longestStreak >= 30) {
+          unlockedAt = workSessions.length > 0 ? workSessions[0].startTime : Date.now()
+        }
         break
       case 'deep-diver':
-        if (hasLongSession) unlockedAt = Date.now()
+        if (hasLongSession) {
+          const longSession = workSessions.find((s) => s.duration >= 60)
+          unlockedAt = longSession ? longSession.startTime : Date.now()
+        }
         break
       case 'collector':
-        if (hasAllRarities) unlockedAt = Date.now()
+        if (hasAllRarities) unlockedAt = Math.max(...plants.map((p) => p.plantedAt))
         break
       case 'legendary':
-        if (hasLegendary) unlockedAt = Date.now()
+        if (hasLegendary) unlockedAt = (plants.find((p) => p.rarity === 'legendary'))?.plantedAt ?? Date.now()
         break
       case 'century':
-        if (totalFocusHours >= 100) unlockedAt = Date.now()
+        if (totalFocusHours >= 100) unlockedAt = workSessions[workSessions.length - 1].startTime
         break
     }
     return { ...def, unlockedAt }
@@ -206,12 +212,11 @@ function renderBarChart(dailyStats: Insights['dailyStats']): void {
   }
 }
 
-function renderPieChart(sessions: Session[]): void {
+function renderPieChart(workSessions: Session[]): void {
   const container = document.getElementById('pie-chart')
   const legendContainer = document.getElementById('pie-legend')
   if (!container || !legendContainer) return
 
-  const workSessions = sessions.filter((s) => s.completed && s.type === 'work')
   const categoryMap: Record<string, number> = {}
   for (const s of workSessions) {
     const cat = s.category || 'other'
@@ -251,7 +256,7 @@ function renderPieChart(sessions: Session[]): void {
   const circumference = 2 * Math.PI * radius
   let offset = 0
 
-  let svgContent = `<svg viewBox="0 0 192 192" class="w-full h-full -rotate-90">`
+  let svgContent = `<svg viewBox="0 0 192 192" class="w-full h-full -rotate-90" role="img" aria-label="Focus distribution pie chart">`
 
   for (const [cat, duration] of categories) {
     const pct = duration / total
@@ -284,6 +289,7 @@ function renderPieChart(sessions: Session[]): void {
   `
 
   container.innerHTML = svgContent
+  container.classList.add('relative')
   container.appendChild(centerOverlay)
 
   legendContainer.innerHTML = ''
@@ -304,12 +310,10 @@ function renderPieChart(sessions: Session[]): void {
 }
 
 function renderTotalFocus(
-  sessions: Session[],
+  _workSessions: Session[],
+  totalMinutes: number,
   monthlyGoalHours: number
 ): void {
-  const totalMinutes = sessions
-    .filter((s) => s.completed && s.type === 'work')
-    .reduce((sum, s) => sum + s.duration, 0)
   const totalHours = Math.round((totalMinutes / 60) * 10) / 10
 
   const hoursEl = document.getElementById('total-hours')
@@ -390,6 +394,8 @@ async function initInsightsPage(): Promise<void> {
     mobileNavContainer.appendChild(createMobileNav('insights'))
   }
 
+  applyTheme()
+
   // Load data
   let insights: Insights
   let plants: Plant[]
@@ -424,10 +430,9 @@ async function initInsightsPage(): Promise<void> {
     sessions = []
   }
 
-  // Compute derived data
-  const totalFocusMinutes = sessions
-    .filter((s) => s.completed && s.type === 'work')
-    .reduce((sum, s) => sum + s.duration, 0)
+  // Compute derived data (filter once, reuse)
+  const workSessions = sessions.filter((s) => s.completed && s.type === 'work')
+  const totalFocusMinutes = workSessions.reduce((sum, s) => sum + s.duration, 0)
   const totalFocusHours = totalFocusMinutes / 60
   const level = computeGardenerLevel(totalFocusHours)
 
@@ -438,8 +443,8 @@ async function initInsightsPage(): Promise<void> {
   // Render sections
   renderStreakCard(insights)
   renderBarChart(insights.dailyStats)
-  renderPieChart(sessions)
-  renderTotalFocus(sessions, insights.monthlyGoalHours)
+  renderPieChart(workSessions)
+  renderTotalFocus(workSessions, totalFocusMinutes, insights.monthlyGoalHours)
 
   const achievements = computeAchievements(insights, plants, sessions)
   renderAchievements(achievements)

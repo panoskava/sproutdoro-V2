@@ -9,6 +9,7 @@ import {
 import { getSettings, createSession, getTodaySessions } from './storage'
 import { Timer } from './timer-engine'
 import { AudioManager } from './audio'
+import { applyTheme } from './theme'
 
 function formatTime(totalSeconds: number): { mm: string; ss: string } {
   const mins = Math.floor(totalSeconds / 60)
@@ -16,6 +17,43 @@ function formatTime(totalSeconds: number): { mm: string; ss: string } {
   return {
     mm: String(mins).padStart(2, '0'),
     ss: String(secs).padStart(2, '0'),
+  }
+}
+
+const TIMER_STATE_KEY = 'sproutdoro-timer-state'
+
+interface TimerStatePersist {
+  mode: 'work' | 'shortBreak' | 'longBreak'
+  state: 'idle' | 'running' | 'paused'
+  remainingSeconds: number
+  totalSeconds: number
+  sessionCount: number
+  lastTick: number | null
+}
+
+function saveTimerState(state: TimerStatePersist): void {
+  try {
+    sessionStorage.setItem(TIMER_STATE_KEY, JSON.stringify(state))
+  } catch {
+    // sessionStorage may be unavailable in private browsing
+  }
+}
+
+function loadTimerState(): TimerStatePersist | null {
+  try {
+    const raw = sessionStorage.getItem(TIMER_STATE_KEY)
+    if (!raw) return null
+    return JSON.parse(raw) as TimerStatePersist
+  } catch {
+    return null
+  }
+}
+
+function clearTimerState(): void {
+  try {
+    sessionStorage.removeItem(TIMER_STATE_KEY)
+  } catch {
+    // ignore
   }
 }
 
@@ -33,15 +71,15 @@ async function initTimerPage() {
     return
   }
 
+  applyTheme()
+
   const audioManager = new AudioManager()
   audioManager.setGlobalVolume(settings.volume / 100)
 
   // Preload sounds
   const soundsToLoad = [settings.sound, 'completion', 'break']
   for (const name of soundsToLoad) {
-    audioManager.loadSound(name, `/sounds/${name}.mp3`).catch((err) => {
-      console.warn(`Failed to preload sound "${name}":`, err)
-    })
+    audioManager.loadSound(name, `/sounds/${name}.mp3`)
   }
 
   // Render navs
@@ -266,10 +304,44 @@ async function initTimerPage() {
         }
       }
     }
+    clearTimerState()
   }
 
   timer = new Timer(settings, updateDisplay, onTimerComplete)
-  updateDisplay(timer.getState())
+
+  // Restore previous timer state if available
+  const savedState = loadTimerState()
+  if (savedState) {
+    if (savedState.state === 'running' && savedState.lastTick) {
+      const elapsed = Math.floor((Date.now() - savedState.lastTick) / 1000)
+      savedState.remainingSeconds = Math.max(0, savedState.remainingSeconds - elapsed)
+      if (savedState.remainingSeconds <= 0) {
+        savedState.state = 'idle'
+        clearTimerState()
+      }
+    }
+    if (savedState.state !== 'idle' || savedState.remainingSeconds > 0) {
+      timer.restoreState(savedState)
+    }
+  }
+
+  // Save timer state on every display update
+  const originalUpdateDisplay = updateDisplay
+  const updateDisplayWithSave = (state: import('./timer-engine').TimerState) => {
+    originalUpdateDisplay(state)
+    if (state.state === 'complete') {
+      clearTimerState()
+    } else {
+      saveTimerState({
+        ...state,
+        state: state.state as 'idle' | 'running' | 'paused',
+        lastTick: state.state === 'running' ? Date.now() : null,
+      })
+    }
+  }
+  timer.onUpdate = updateDisplayWithSave
+
+  updateDisplayWithSave(timer.getState())
 
   // Button handlers
   if (startPauseBtn) {
@@ -293,6 +365,7 @@ async function initTimerPage() {
       if (!timer) return
       timer.reset()
       audioManager.stopAmbient()
+      clearTimerState()
     })
   }
 

@@ -32,6 +32,9 @@ export function createToggleSwitch(props: ToggleSwitchProps): HTMLElement {
   checkbox.type = 'checkbox'
   checkbox.className = 'sr-only peer'
   checkbox.checked = checked
+  checkbox.setAttribute('role', 'switch')
+  checkbox.setAttribute('aria-checked', String(checked))
+  checkbox.setAttribute('aria-label', label)
 
   const track = document.createElement('div')
   track.className = `w-11 h-6 rounded-full peer transition-colors duration-200 ${
@@ -45,6 +48,7 @@ export function createToggleSwitch(props: ToggleSwitchProps): HTMLElement {
 
   checkbox.addEventListener('change', () => {
     const isChecked = checkbox.checked
+    checkbox.setAttribute('aria-checked', String(isChecked))
     track.className = `w-11 h-6 rounded-full peer transition-colors duration-200 ${
       isChecked ? 'bg-primary' : 'bg-surface-container-high'
     }`

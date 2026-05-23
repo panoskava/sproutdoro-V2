@@ -6,6 +6,7 @@ import { createToggleSwitch } from './components/ToggleSwitch'
 import { createSoundCard } from './components/SoundCard'
 import { getSettings, saveSettings, DEFAULT_SETTINGS } from './storage'
 import type { Settings } from '../types'
+import { applyTheme, setTheme } from './theme'
 
 function updateSoundCardVisuals(card: Element, selected: boolean) {
   if (selected) {
@@ -36,6 +37,8 @@ async function initSettingsPage() {
     alert('Unable to load settings. Please try refreshing the page.')
     return
   }
+
+  applyTheme()
 
   // Render navs
   const sideNavContainer = document.getElementById('side-nav')
@@ -134,8 +137,9 @@ async function initSettingsPage() {
     }`
     darkBtn.textContent = 'Dark'
 
-    async function setTheme(theme: 'light' | 'dark') {
+    async function setThemeLocal(theme: 'light' | 'dark') {
       settings.theme = theme
+      setTheme(theme)
       await persistSettings()
       lightBtn.className = `px-4 py-2 rounded-full font-label text-sm font-semibold transition-all duration-200 ${
         theme === 'light'
@@ -149,8 +153,8 @@ async function initSettingsPage() {
       }`
     }
 
-    lightBtn.addEventListener('click', () => setTheme('light'))
-    darkBtn.addEventListener('click', () => setTheme('dark'))
+    lightBtn.addEventListener('click', () => setThemeLocal('light'))
+    darkBtn.addEventListener('click', () => setThemeLocal('dark'))
 
     themeButtons.appendChild(lightBtn)
     themeButtons.appendChild(darkBtn)
@@ -270,20 +274,7 @@ async function initSettingsPage() {
     })
   }
 
-  // Save Changes
-  const saveBtn = document.getElementById('btn-save')
-  if (saveBtn) {
-    saveBtn.addEventListener('click', async () => {
-      await persistSettings()
-      const originalText = saveBtn.textContent
-      saveBtn.textContent = 'Saved!'
-      saveBtn.classList.add('opacity-80')
-      setTimeout(() => {
-        saveBtn.textContent = originalText
-        saveBtn.classList.remove('opacity-80')
-      }, 2000)
-    })
-  }
+
 }
 
 initSettingsPage().catch(console.error)

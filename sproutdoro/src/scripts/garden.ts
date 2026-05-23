@@ -3,7 +3,8 @@ import { createSideNav } from './components/SideNav'
 import { createMobileNav } from './components/MobileNav'
 import { createPlantCard } from './components/PlantCard'
 import { createStatCard } from './components/StatCard'
-import { getAllPlants, getFeaturedPlant } from './storage'
+import { getAllPlants } from './storage'
+import { applyTheme } from './theme'
 import type { Plant } from '../types'
 
 async function initGardenPage() {
@@ -17,6 +18,8 @@ async function initGardenPage() {
   if (mobileNavContainer) {
     mobileNavContainer.appendChild(createMobileNav('garden'))
   }
+
+  applyTheme()
 
   // Load plants
   let plants: Plant[]
@@ -55,21 +58,16 @@ async function initGardenPage() {
     )
   }
 
-  // Render featured plant
+  // Render featured plant (use already-fetched plants array)
   const featuredSection = document.getElementById('featured-plant-section')
   const featuredContainer = document.getElementById('featured-plant')
   if (featuredSection && featuredContainer) {
     if (plants.length > 0) {
-      try {
-        const featured = await getFeaturedPlant()
-        if (featured) {
-          const card = createPlantCard({ plant: featured, isFeatured: true })
-          featuredContainer.appendChild(card)
-        }
-      } catch (err) {
-        console.error('Failed to load featured plant:', err)
-        featuredSection.style.display = 'none'
-      }
+      const featured = plants.reduce((best, p) =>
+        p.totalFocusMinutes > best.totalFocusMinutes ? p : best
+      )
+      const card = createPlantCard({ plant: featured, isFeatured: true })
+      featuredContainer.appendChild(card)
     } else {
       featuredSection.style.display = 'none'
     }

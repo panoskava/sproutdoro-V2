@@ -16,7 +16,7 @@ export function createStatCard(props: StatCardProps): HTMLElement {
     card.dataset.stat = dataStat
   }
   card.className =
-    'stat-card-glass rounded-2xl p-5 flex items-center gap-4 transition-all duration-300 hover:-translate-y-1 cursor-default'
+    'stat-card-glass rounded-2xl p-5 flex items-center gap-4'
   if (delay > 0) {
     card.style.animationDelay = `${delay}ms`
   }
