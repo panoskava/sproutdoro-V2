@@ -4,6 +4,7 @@ import { createMobileNav } from './components/MobileNav'
 import { createPlantCard } from './components/PlantCard'
 import { createStatCard } from './components/StatCard'
 import { getAllPlants, getFeaturedPlant } from './storage'
+import { applyTheme } from './theme'
 import type { Plant } from '../types'
 
 async function initGardenPage() {
@@ -17,6 +18,8 @@ async function initGardenPage() {
   if (mobileNavContainer) {
     mobileNavContainer.appendChild(createMobileNav('garden'))
   }
+
+  applyTheme()
 
   // Load plants
   let plants: Plant[]

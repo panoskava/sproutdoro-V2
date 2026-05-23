@@ -9,6 +9,7 @@ import {
 import { getSettings, createSession, getTodaySessions } from './storage'
 import { Timer } from './timer-engine'
 import { AudioManager } from './audio'
+import { applyTheme } from './theme'
 
 function formatTime(totalSeconds: number): { mm: string; ss: string } {
   const mins = Math.floor(totalSeconds / 60)
@@ -32,6 +33,8 @@ async function initTimerPage() {
     alert('Unable to load timer settings. Please try refreshing the page.')
     return
   }
+
+  applyTheme()
 
   const audioManager = new AudioManager()
   audioManager.setGlobalVolume(settings.volume / 100)

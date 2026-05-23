@@ -2,6 +2,7 @@ import '../styles/main.css'
 import { createSideNav } from './components/SideNav'
 import { createMobileNav } from './components/MobileNav'
 import { getInsights, getAllPlants, getSessions } from './storage'
+import { applyTheme } from './theme'
 import type { Insights, Plant, Session, Achievement } from '../types'
 
 /* ------------------------------------------------------------------ */
@@ -390,6 +391,8 @@ async function initInsightsPage(): Promise<void> {
   if (mobileNavContainer) {
     mobileNavContainer.appendChild(createMobileNav('insights'))
   }
+
+  applyTheme()
 
   // Load data
   let insights: Insights
