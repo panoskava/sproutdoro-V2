@@ -379,10 +379,11 @@ async function initTimerPage() {
     } else {
       saveTimerState({
         ...state,
-        state: state.state as 'idle' | 'running' | 'paused',
-        lastTick: state.state === 'running' ? Date.now() : null,
+        state: state.state as 'idle' | 'running' | 'paused' | 'onBreak' | 'complete',
+        lastTick: (state.state === 'running' || state.state === 'onBreak') ? Date.now() : null,
         adjustmentOffset: state.adjustmentOffset ?? 0,
         modeAtAdjustmentStart: state.modeAtAdjustmentStart ?? null,
+        breakBookmark: state.breakBookmark ?? null,
       })
     }
   }
