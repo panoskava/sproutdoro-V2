@@ -11,7 +11,7 @@ export class AudioManager {
   private ambientGains: GainNode[] = []
 
   loadSound(name: string, url: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const audio = new Audio(url)
       audio.addEventListener(
         'canplaythrough',
@@ -23,7 +23,9 @@ export class AudioManager {
       )
       audio.addEventListener(
         'error',
-        () => reject(new Error(`Failed to load sound: ${url}`)),
+        () => {
+          resolve()
+        },
         { once: true }
       )
       audio.load()

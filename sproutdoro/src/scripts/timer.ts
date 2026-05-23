@@ -39,9 +39,7 @@ async function initTimerPage() {
   // Preload sounds
   const soundsToLoad = [settings.sound, 'completion', 'break']
   for (const name of soundsToLoad) {
-    audioManager.loadSound(name, `/sounds/${name}.mp3`).catch((err) => {
-      console.warn(`Failed to preload sound "${name}":`, err)
-    })
+    audioManager.loadSound(name, `/sounds/${name}.mp3`)
   }
 
   // Render navs
