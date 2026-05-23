@@ -2,6 +2,7 @@ import { NAV_ITEMS } from './nav-config'
 
 export function createSideNav(currentPage: string): HTMLElement {
   const nav = document.createElement('nav')
+  nav.setAttribute('aria-label', 'Main navigation')
   nav.className =
     'hidden md:flex flex-col sticky left-0 top-0 h-screen w-72 glass-sage rounded-r-[2.5rem] py-8 px-6 z-50'
 
@@ -40,12 +41,16 @@ export function createSideNav(currentPage: string): HTMLElement {
 
   // Start Session button
   const btn = document.createElement('button')
+  btn.setAttribute('aria-label', 'Start a focus session')
   btn.className =
     'mt-auto w-full py-3.5 px-6 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary font-label font-semibold text-sm shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 hover:-translate-y-0.5 flex items-center justify-center gap-2'
   btn.innerHTML = `
     <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1, 'wght' 600;">play_arrow</span>
     Start Session
   `
+  btn.addEventListener('click', () => {
+    window.location.href = './index.html'
+  })
   nav.appendChild(btn)
 
   return nav
