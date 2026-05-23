@@ -4,8 +4,9 @@ import { createMobileNav } from './components/MobileNav'
 import { createRangeSlider } from './components/RangeSlider'
 import { createToggleSwitch } from './components/ToggleSwitch'
 import { createSoundCard } from './components/SoundCard'
-import { getSettings, saveSettings, DEFAULT_SETTINGS } from './storage'
+import { getSettings, saveSettings, DEFAULT_SETTINGS, getCategories } from './storage'
 import type { Settings } from '../types'
+import { createCategoryManager } from './components/CategoryManager'
 import { applyTheme, setTheme } from './theme'
 
 function updateSoundCardVisuals(card: Element, selected: boolean) {
@@ -278,6 +279,21 @@ async function initSettingsPage() {
         },
       })
     )
+  }
+
+  // Categories
+  const categoryContainer = document.getElementById('category-manager-container')
+  if (categoryContainer) {
+    async function renderCategories() {
+      const cats = await getCategories()
+      categoryContainer.innerHTML = ''
+      const manager = createCategoryManager({
+        categories: cats,
+        onCategoryChange: renderCategories,
+      })
+      categoryContainer.appendChild(manager)
+    }
+    renderCategories()
   }
 
   // Reset Defaults
