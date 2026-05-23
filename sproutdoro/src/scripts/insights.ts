@@ -1,9 +1,9 @@
 import '../styles/main.css'
 import { createSideNav } from './components/SideNav'
 import { createMobileNav } from './components/MobileNav'
-import { getInsights, getAllPlants, getSessions } from './storage'
+import { getInsights, getAllPlants, getSessions, getCategories } from './storage'
 import { applyTheme } from './theme'
-import type { Insights, Plant, Session, Achievement } from '../types'
+import type { Insights, Plant, Session, Achievement, Category } from '../types'
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                            */
@@ -212,37 +212,28 @@ function renderBarChart(dailyStats: Insights['dailyStats']): void {
   }
 }
 
-function renderPieChart(workSessions: Session[]): void {
+function renderPieChart(workSessions: Session[], categories: Category[]): void {
   const container = document.getElementById('pie-chart')
   const legendContainer = document.getElementById('pie-legend')
   if (!container || !legendContainer) return
 
   const categoryMap: Record<string, number> = {}
   for (const s of workSessions) {
-    const cat = s.category || 'other'
+    const cat = s.category || 'uncategorized'
     categoryMap[cat] = (categoryMap[cat] || 0) + s.duration
   }
 
-  const categoryColors: Record<string, string> = {
-    'deep-work': '#516233',
-    reading: '#934a29',
-    planning: '#fd9e77',
-    creative: '#3f5d87',
-    learning: '#5876a1',
-    other: '#76786c',
+  const categoryColorMap = new Map<string, string>()
+  const categoryNameMap = new Map<string, string>()
+  for (const cat of categories) {
+    categoryColorMap.set(cat.id, cat.color)
+    categoryNameMap.set(cat.id, cat.name)
   }
+  categoryColorMap.set('uncategorized', '#76786c')
+  categoryNameMap.set('uncategorized', 'Uncategorized')
 
-  const categoryLabels: Record<string, string> = {
-    'deep-work': 'Deep Work',
-    reading: 'Reading',
-    planning: 'Planning',
-    creative: 'Creative',
-    learning: 'Learning',
-    other: 'Other',
-  }
-
-  const categories = Object.entries(categoryMap)
-  const total = categories.reduce((sum, [, duration]) => sum + duration, 0)
+  const entries = Object.entries(categoryMap)
+  const total = entries.reduce((sum, [, duration]) => sum + duration, 0)
 
   if (total === 0) {
     container.innerHTML =
@@ -258,10 +249,10 @@ function renderPieChart(workSessions: Session[]): void {
 
   let svgContent = `<svg viewBox="0 0 192 192" class="w-full h-full -rotate-90" role="img" aria-label="Focus distribution pie chart">`
 
-  for (const [cat, duration] of categories) {
+  for (const [cat, duration] of entries) {
     const pct = duration / total
     const dashArray = `${pct * circumference} ${circumference}`
-    const color = categoryColors[cat] || '#76786c'
+    const color = categoryColorMap.get(cat) || '#76786c'
 
     svgContent += `
       <circle
@@ -293,10 +284,10 @@ function renderPieChart(workSessions: Session[]): void {
   container.appendChild(centerOverlay)
 
   legendContainer.innerHTML = ''
-  for (const [cat, duration] of categories) {
+  for (const [cat, duration] of entries) {
     const pct = Math.round((duration / total) * 100)
-    const color = categoryColors[cat] || '#76786c'
-    const label = categoryLabels[cat] || cat
+    const color = categoryColorMap.get(cat) || '#76786c'
+    const label = categoryNameMap.get(cat) || cat
 
     const item = document.createElement('div')
     item.className = 'flex items-center gap-2'
@@ -378,6 +369,75 @@ function renderAchievements(achievements: Achievement[]): void {
   }
 }
 
+function renderCategoryBreakdown(categoryStats: Insights['categoryStats']): void {
+  const container = document.getElementById('category-breakdown')
+  if (!container) return
+
+  container.innerHTML = ''
+
+  if (categoryStats.length === 0) {
+    const empty = document.createElement('p')
+    empty.className = 'font-body text-sm text-on-surface/50 text-center py-6'
+    empty.textContent = 'Start focusing with categories to see your breakdown.'
+    container.appendChild(empty)
+    return
+  }
+
+  const totalMinutes = categoryStats.reduce((sum, cs) => sum + cs.totalFocusMinutes, 0)
+
+  for (const cs of categoryStats) {
+    const pct = totalMinutes > 0 ? Math.round((cs.totalFocusMinutes / totalMinutes) * 100) : 0
+    const hours = Math.floor(cs.totalFocusMinutes / 60)
+    const mins = Math.round(cs.totalFocusMinutes % 60)
+
+    const row = document.createElement('div')
+    row.className = 'flex flex-col gap-2'
+
+    const topRow = document.createElement('div')
+    topRow.className = 'flex items-center justify-between'
+
+    const labelGroup = document.createElement('div')
+    labelGroup.className = 'flex items-center gap-2'
+
+    const colorDot = document.createElement('span')
+    colorDot.className = 'w-3 h-3 rounded-full flex-shrink-0'
+    colorDot.style.backgroundColor = cs.categoryColor
+
+    const name = document.createElement('span')
+    name.className = 'font-label text-sm font-semibold text-on-surface'
+    name.textContent = cs.categoryName
+
+    const sessionCount = document.createElement('span')
+    sessionCount.className = 'font-label text-[10px] text-on-surface/50'
+    sessionCount.textContent = `${cs.sessionCount} session${cs.sessionCount === 1 ? '' : 's'}`
+
+    labelGroup.appendChild(colorDot)
+    labelGroup.appendChild(name)
+    labelGroup.appendChild(sessionCount)
+
+    const timeLabel = document.createElement('span')
+    timeLabel.className = 'font-label text-sm font-semibold text-on-surface'
+    timeLabel.textContent = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`
+
+    topRow.appendChild(labelGroup)
+    topRow.appendChild(timeLabel)
+
+    const progressWrap = document.createElement('div')
+    progressWrap.className = 'w-full h-2 bg-surface-container-high rounded-full overflow-hidden'
+
+    const progressBar = document.createElement('div')
+    progressBar.className = 'h-full rounded-full transition-all duration-500'
+    progressBar.style.width = `${pct}%`
+    progressBar.style.backgroundColor = cs.categoryColor
+
+    progressWrap.appendChild(progressBar)
+
+    row.appendChild(topRow)
+    row.appendChild(progressWrap)
+    container.appendChild(row)
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* Init                                                               */
 /* ------------------------------------------------------------------ */
@@ -431,6 +491,14 @@ async function initInsightsPage(): Promise<void> {
     sessions = []
   }
 
+  let categories: Category[] = []
+  try {
+    categories = await getCategories()
+  } catch (err) {
+    console.error('Failed to load categories:', err)
+    categories = []
+  }
+
   // Compute derived data (filter once, reuse)
   const workSessions = sessions.filter((s) => s.completed && s.type === 'work')
   const totalFocusMinutes = workSessions.reduce((sum, s) => sum + s.duration, 0)
@@ -444,11 +512,12 @@ async function initInsightsPage(): Promise<void> {
   // Render sections
   renderStreakCard(insights)
   renderBarChart(insights.dailyStats)
-  renderPieChart(workSessions)
+  renderPieChart(workSessions, categories)
   renderTotalFocus(workSessions, totalFocusMinutes, insights.monthlyGoalHours)
 
   const achievements = computeAchievements(insights, plants, sessions)
   renderAchievements(achievements)
+  renderCategoryBreakdown(insights.categoryStats)
 }
 
 initInsightsPage().catch(console.error)
