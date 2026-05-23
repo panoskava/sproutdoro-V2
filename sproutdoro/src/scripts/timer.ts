@@ -516,5 +516,6 @@ async function initTimerPage() {
       updateTimerAdjustButtonsVisibility(false)
     })
   }
+}
 
 initTimerPage().catch(console.error)

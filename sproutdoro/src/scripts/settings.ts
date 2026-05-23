@@ -284,14 +284,15 @@ async function initSettingsPage() {
   // Categories
   const categoryContainer = document.getElementById('category-manager-container')
   if (categoryContainer) {
+    const container = categoryContainer
     async function renderCategories() {
       const cats = await getCategories()
-      categoryContainer.innerHTML = ''
+      container.innerHTML = ''
       const manager = createCategoryManager({
         categories: cats,
         onCategoryChange: renderCategories,
       })
-      categoryContainer.appendChild(manager)
+      container.appendChild(manager)
     }
     renderCategories()
   }
