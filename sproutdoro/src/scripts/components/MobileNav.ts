@@ -23,6 +23,7 @@ export function createMobileNav(currentPage: string): HTMLElement {
 
     // FAB for Garden page
     if (isGarden && currentPage === 'garden') {
+      a.href = './index.html'
       a.className =
         'relative -top-5 flex items-center justify-center w-14 h-14 rounded-full bg-primary text-on-primary shadow-lg shadow-primary/30 transition-all duration-200 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-1'
       a.innerHTML = `
