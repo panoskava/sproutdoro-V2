@@ -274,20 +274,7 @@ async function initSettingsPage() {
     })
   }
 
-  // Save Changes
-  const saveBtn = document.getElementById('btn-save')
-  if (saveBtn) {
-    saveBtn.addEventListener('click', async () => {
-      await persistSettings()
-      const originalText = saveBtn.textContent
-      saveBtn.textContent = 'Saved!'
-      saveBtn.classList.add('opacity-80')
-      setTimeout(() => {
-        saveBtn.textContent = originalText
-        saveBtn.classList.remove('opacity-80')
-      }, 2000)
-    })
-  }
+
 }
 
 initSettingsPage().catch(console.error)
