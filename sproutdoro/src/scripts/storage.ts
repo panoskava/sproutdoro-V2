@@ -1,8 +1,8 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
-import type { Settings, Session, Plant, Insights } from '../types'
+import type { Settings, Session, Plant, Insights, Category } from '../types'
 
 const DB_NAME = 'sproutdoro-db'
-const DB_VERSION = 1
+const DB_VERSION = 2
 
 export const DEFAULT_SETTINGS: Settings = {
   workDuration: 25,
@@ -34,6 +34,11 @@ interface SproutdoroDB extends DBSchema {
     key: string
     value: Insights & { id: string }
   }
+  categories: {
+    key: string
+    value: Category
+    indexes: { 'by-name': string }
+  }
 }
 
 let dbPromise: Promise<IDBPDatabase<SproutdoroDB>> | null = null
@@ -41,25 +46,31 @@ let dbPromise: Promise<IDBPDatabase<SproutdoroDB>> | null = null
 function getDB(): Promise<IDBPDatabase<SproutdoroDB>> {
   if (!dbPromise) {
     dbPromise = openDB<SproutdoroDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains('settings')) {
-          db.createObjectStore('settings', { keyPath: 'id' })
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1) {
+          if (!db.objectStoreNames.contains('settings')) {
+            db.createObjectStore('settings', { keyPath: 'id' })
+          }
+          if (!db.objectStoreNames.contains('sessions')) {
+            const sessionStore = db.createObjectStore('sessions', { keyPath: 'id' })
+            sessionStore.createIndex('by-date', 'startTime')
+            sessionStore.createIndex('by-type', 'type')
+          }
+          if (!db.objectStoreNames.contains('plants')) {
+            const plantStore = db.createObjectStore('plants', { keyPath: 'id' })
+            plantStore.createIndex('by-rarity', 'rarity')
+            plantStore.createIndex('by-level', 'level')
+          }
+          if (!db.objectStoreNames.contains('insights')) {
+            db.createObjectStore('insights', { keyPath: 'id' })
+          }
         }
 
-        if (!db.objectStoreNames.contains('sessions')) {
-          const sessionStore = db.createObjectStore('sessions', { keyPath: 'id' })
-          sessionStore.createIndex('by-date', 'startTime')
-          sessionStore.createIndex('by-type', 'type')
-        }
-
-        if (!db.objectStoreNames.contains('plants')) {
-          const plantStore = db.createObjectStore('plants', { keyPath: 'id' })
-          plantStore.createIndex('by-rarity', 'rarity')
-          plantStore.createIndex('by-level', 'level')
-        }
-
-        if (!db.objectStoreNames.contains('insights')) {
-          db.createObjectStore('insights', { keyPath: 'id' })
+        if (oldVersion < 2) {
+          if (!db.objectStoreNames.contains('categories')) {
+            const categoryStore = db.createObjectStore('categories', { keyPath: 'id' })
+            categoryStore.createIndex('by-name', 'name', { unique: true })
+          }
         }
       },
     })
@@ -247,6 +258,7 @@ async function computeInsights(): Promise<Insights> {
   const db = await getDB()
   const sessions: Session[] = await db.getAll('sessions')
   const plants: Plant[] = await db.getAll('plants')
+  const categories: Category[] = await db.getAll('categories')
 
   /* ---- daily aggregation ---- */
   const dailyMap = new Map<
@@ -339,12 +351,41 @@ async function computeInsights(): Promise<Insights> {
     ? new Date(lastSessionTimestamp).setHours(0, 0, 0, 0)
     : 0
 
+  /* ---- category aggregation ---- */
+  const categoryMap = new Map<string, { totalFocusMinutes: number; sessionCount: number }>()
+  for (const s of sessions) {
+    if (!s.completed || s.type !== 'work') continue
+    const catId = s.category || 'uncategorized'
+    const cur = categoryMap.get(catId) ?? { totalFocusMinutes: 0, sessionCount: 0 }
+    cur.totalFocusMinutes += s.duration
+    cur.sessionCount += 1
+    categoryMap.set(catId, cur)
+  }
+
+  const categoryStats = Array.from(categoryMap.entries()).map(([catId, data]) => {
+    const cat = categories.find((c) => c.id === catId)
+    return {
+      categoryId: catId,
+      categoryName: cat?.name ?? (catId === 'uncategorized' ? 'Uncategorized' : catId),
+      categoryColor: cat?.color ?? '#76786c',
+      totalFocusMinutes: data.totalFocusMinutes,
+      sessionCount: data.sessionCount,
+      weeklyTrend: weeklyStats.map((ws) => ({
+        weekStart: ws.weekStart,
+        totalFocusMinutes: 0,
+      })),
+    }
+  })
+
+  categoryStats.sort((a, b) => b.totalFocusMinutes - a.totalFocusMinutes)
+
   return {
     currentStreak,
     longestStreak,
     lastSessionDate,
     dailyStats,
     weeklyStats,
+    categoryStats,
     achievements: [],
     monthlyGoalHours: 40,
   }
@@ -362,6 +403,7 @@ export async function getInsights(): Promise<Insights> {
       lastSessionDate: 0,
       dailyStats: [],
       weeklyStats: [],
+      categoryStats: [],
       achievements: [],
       monthlyGoalHours: 40,
     }
@@ -374,6 +416,55 @@ export async function updateInsights(insights: Insights): Promise<void> {
     await db.put('insights', { ...insights, id: 'default' })
   } catch (err) {
     console.error('updateInsights failed:', err)
+    throw err
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Categories                                                         */
+/* ------------------------------------------------------------------ */
+
+export const DEFAULT_CATEGORIES: Category[] = [
+  { id: 'cat-deep-work', name: 'Deep Work', color: '#516233', icon: 'psychology', createdAt: Date.now() },
+  { id: 'cat-reading', name: 'Reading', color: '#934a29', icon: 'menu_book', createdAt: Date.now() },
+  { id: 'cat-planning', name: 'Planning', color: '#fd9e77', icon: 'event_note', createdAt: Date.now() },
+  { id: 'cat-creative', name: 'Creative', color: '#3f5d87', icon: 'palette', createdAt: Date.now() },
+  { id: 'cat-learning', name: 'Learning', color: '#5876a1', icon: 'school', createdAt: Date.now() },
+]
+
+export async function getCategories(): Promise<Category[]> {
+  try {
+    const db = await getDB()
+    const categories = await db.getAll('categories')
+    if (categories.length === 0) {
+      for (const cat of DEFAULT_CATEGORIES) {
+        await db.put('categories', cat)
+      }
+      return DEFAULT_CATEGORIES
+    }
+    return categories
+  } catch (err) {
+    console.error('getCategories failed:', err)
+    return DEFAULT_CATEGORIES
+  }
+}
+
+export async function saveCategory(category: Category): Promise<void> {
+  try {
+    const db = await getDB()
+    await db.put('categories', category)
+  } catch (err) {
+    console.error('saveCategory failed:', err)
+    throw err
+  }
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  try {
+    const db = await getDB()
+    await db.delete('categories', id)
+  } catch (err) {
+    console.error('deleteCategory failed:', err)
     throw err
   }
 }
