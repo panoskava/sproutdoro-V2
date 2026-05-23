@@ -5,7 +5,7 @@ interface BreakOverlayProps {
 }
 
 export function createBreakOverlay(props: BreakOverlayProps): HTMLElement {
-  const { breakDuration, onBreakComplete, onCancelBreak } = props
+  const { onCancelBreak } = props
 
   const overlay = document.createElement('div')
   overlay.id = 'break-overlay'
