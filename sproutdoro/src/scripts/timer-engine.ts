@@ -10,7 +10,7 @@ export interface TimerState {
 
 export class Timer {
   private settings: Settings
-  private onUpdate: (state: TimerState) => void
+  onUpdate: (state: TimerState) => void
   private onComplete: (mode: string) => void
   private state: TimerState
   private intervalId: number | null = null
@@ -139,5 +139,26 @@ export class Timer {
 
   getState(): TimerState {
     return { ...this.state }
+  }
+
+  restoreState(saved: {
+    mode: 'work' | 'shortBreak' | 'longBreak'
+    state: 'idle' | 'running' | 'paused'
+    remainingSeconds: number
+    totalSeconds: number
+    sessionCount: number
+  }): void {
+    this.clearTimer()
+    this.clearTransitionTimeout()
+    this.state.mode = saved.mode
+    this.state.state = saved.state
+    this.state.remainingSeconds = saved.remainingSeconds
+    this.state.totalSeconds = saved.totalSeconds
+    this.state.sessionCount = saved.sessionCount
+    if (saved.state === 'running') {
+      this.state.state = 'running'
+      this.intervalId = window.setInterval(() => this.tick(), 1000)
+    }
+    this.onUpdate({ ...this.state })
   }
 }

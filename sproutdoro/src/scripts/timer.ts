@@ -20,6 +20,43 @@ function formatTime(totalSeconds: number): { mm: string; ss: string } {
   }
 }
 
+const TIMER_STATE_KEY = 'sproutdoro-timer-state'
+
+interface TimerStatePersist {
+  mode: 'work' | 'shortBreak' | 'longBreak'
+  state: 'idle' | 'running' | 'paused'
+  remainingSeconds: number
+  totalSeconds: number
+  sessionCount: number
+  lastTick: number | null
+}
+
+function saveTimerState(state: TimerStatePersist): void {
+  try {
+    sessionStorage.setItem(TIMER_STATE_KEY, JSON.stringify(state))
+  } catch {
+    // sessionStorage may be unavailable in private browsing
+  }
+}
+
+function loadTimerState(): TimerStatePersist | null {
+  try {
+    const raw = sessionStorage.getItem(TIMER_STATE_KEY)
+    if (!raw) return null
+    return JSON.parse(raw) as TimerStatePersist
+  } catch {
+    return null
+  }
+}
+
+function clearTimerState(): void {
+  try {
+    sessionStorage.removeItem(TIMER_STATE_KEY)
+  } catch {
+    // ignore
+  }
+}
+
 function isDesktop(): boolean {
   return window.innerWidth >= 768
 }
@@ -267,10 +304,44 @@ async function initTimerPage() {
         }
       }
     }
+    clearTimerState()
   }
 
   timer = new Timer(settings, updateDisplay, onTimerComplete)
-  updateDisplay(timer.getState())
+
+  // Restore previous timer state if available
+  const savedState = loadTimerState()
+  if (savedState) {
+    if (savedState.state === 'running' && savedState.lastTick) {
+      const elapsed = Math.floor((Date.now() - savedState.lastTick) / 1000)
+      savedState.remainingSeconds = Math.max(0, savedState.remainingSeconds - elapsed)
+      if (savedState.remainingSeconds <= 0) {
+        savedState.state = 'idle'
+        clearTimerState()
+      }
+    }
+    if (savedState.state !== 'idle' || savedState.remainingSeconds > 0) {
+      timer.restoreState(savedState)
+    }
+  }
+
+  // Save timer state on every display update
+  const originalUpdateDisplay = updateDisplay
+  const updateDisplayWithSave = (state: import('./timer-engine').TimerState) => {
+    originalUpdateDisplay(state)
+    if (state.state === 'complete') {
+      clearTimerState()
+    } else {
+      saveTimerState({
+        ...state,
+        state: state.state as 'idle' | 'running' | 'paused',
+        lastTick: state.state === 'running' ? Date.now() : null,
+      })
+    }
+  }
+  timer.onUpdate = updateDisplayWithSave
+
+  updateDisplayWithSave(timer.getState())
 
   // Button handlers
   if (startPauseBtn) {
@@ -294,6 +365,7 @@ async function initTimerPage() {
       if (!timer) return
       timer.reset()
       audioManager.stopAmbient()
+      clearTimerState()
     })
   }
 
