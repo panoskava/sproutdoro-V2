@@ -284,6 +284,7 @@ function renderPieChart(sessions: Session[]): void {
   `
 
   container.innerHTML = svgContent
+  container.classList.add('relative')
   container.appendChild(centerOverlay)
 
   legendContainer.innerHTML = ''
