@@ -34,6 +34,42 @@ export function createPlantingPlanModal(props: PlantingPlanModalProps): HTMLElem
   const modal = document.createElement('div')
   modal.className = 'stat-card-glass rounded-3xl p-6 md:p-8 max-w-lg w-full mx-4 max-h-[80vh] flex flex-col gap-4 overflow-hidden'
 
+  // If there's an active plant, show blocker instead of selection list
+  if (props.activePlant) {
+    const blockerHeader = document.createElement('div')
+    blockerHeader.className = 'flex items-center justify-between'
+
+    const blockerTitle = document.createElement('h2')
+    blockerTitle.className = 'font-headline text-xl font-bold text-on-surface'
+    blockerTitle.textContent = 'Already Growing!'
+
+    const blockerCloseBtn = document.createElement('button')
+    blockerCloseBtn.className = 'w-8 h-8 rounded-full flex items-center justify-center text-on-surface/50 hover:text-on-surface hover:bg-surface-container-high/50 transition-all duration-200'
+    blockerCloseBtn.innerHTML = '<span class="material-symbols-outlined" style="font-variation-settings: \'FILL\' 0, \'wght\' 400;">close</span>'
+    blockerCloseBtn.addEventListener('click', onClose)
+
+    blockerHeader.appendChild(blockerTitle)
+    blockerHeader.appendChild(blockerCloseBtn)
+
+    const blockerBody = document.createElement('div')
+    blockerBody.className = 'flex flex-col items-center gap-4 py-6'
+    blockerBody.innerHTML = `
+      <span class="text-4xl">🌱</span>
+      <p class="font-body text-sm text-on-surface/70 text-center max-w-sm">
+        You already have a plant growing!<br>
+        Complete it in the <strong>Currently Growing</strong> section before choosing a new seed.
+      </p>
+    `
+
+    modal.appendChild(blockerHeader)
+    modal.appendChild(blockerBody)
+    overlay.appendChild(modal)
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) onClose()
+    })
+    return overlay
+  }
+
   const header = document.createElement('div')
   header.className = 'flex items-center justify-between'
 
