@@ -1,4 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
+import { PLANT_DEFINITIONS, type PlantDefinition } from './plant-definitions'
 import type { Settings, Session, Plant, Insights, Category } from '../types'
 
 const DB_NAME = 'sproutdoro-db'
@@ -226,6 +227,28 @@ export async function getActivePlant(): Promise<Plant | undefined> {
     console.error('getActivePlant failed:', err)
     return undefined
   }
+}
+
+export function pickWeightedPlantType(): PlantDefinition {
+  const weights: Record<string, number> = {
+    common: 70,
+    uncommon: 20,
+    rare: 8,
+    legendary: 2,
+  }
+
+  const totalWeight = PLANT_DEFINITIONS.reduce(
+    (sum, p) => sum + weights[p.rarity],
+    0
+  )
+
+  let rand = Math.random() * totalWeight
+  for (const def of PLANT_DEFINITIONS) {
+    rand -= weights[def.rarity]
+    if (rand <= 0) return def
+  }
+
+  return PLANT_DEFINITIONS[0]
 }
 
 export async function getFeaturedPlant(): Promise<Plant | undefined> {
