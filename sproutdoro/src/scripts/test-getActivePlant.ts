@@ -4,7 +4,11 @@ import type { Plant } from '../types'
 
 async function testGetActivePlant() {
   // Clear DB for test isolation
-  indexedDB.deleteDatabase('sproutdoro-db')
+  await new Promise<void>((resolve, reject) => {
+    const req = indexedDB.deleteDatabase('sproutdoro-db')
+    req.onsuccess = () => resolve()
+    req.onerror = () => reject(new Error('Failed to delete test database'))
+  })
 
   // Test 1: No plants = undefined
   let result = await getActivePlant()
