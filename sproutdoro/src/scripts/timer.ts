@@ -15,6 +15,11 @@ import { applyTheme } from './theme'
 import { createTimerAdjustButtons, updateTimerAdjustButtonsVisibility } from './components/TimerAdjustButtons'
 import { createBreakOverlay, showBreakOverlay, hideBreakOverlay, updateBreakOverlay } from './components/BreakOverlay'
 import { getPlantDefinition } from './plant-definitions'
+import {
+  createPlantGrowthRing,
+  updatePlantGrowthRing,
+  createGrowthEmojiElement,
+} from './components/PlantGrowthRing'
 
 function formatTime(totalSeconds: number): { mm: string; ss: string } {
   const mins = Math.floor(totalSeconds / 60)
@@ -229,6 +234,18 @@ async function initTimerPage() {
     timerRingContainer.appendChild(timerCircle)
   }
 
+  // Create plant growth ring + emoji inside timer glass
+  let growthRingSvg: SVGSVGElement | null = null
+  const plantGrowthCenter = document.getElementById('plant-growth-center')
+  if (plantGrowthCenter && timerRingContainer) {
+    const size = isDesktop() ? 480 : 320
+    growthRingSvg = createPlantGrowthRing({ size, progress: 0 })
+    plantGrowthCenter.appendChild(growthRingSvg)
+
+    const emojiEl = createGrowthEmojiElement(size)
+    plantGrowthCenter.appendChild(emojiEl)
+  }
+
   let timer: Timer | null = null
 
   function updateDisplay(state: import('./timer-engine').TimerState) {
@@ -244,6 +261,16 @@ async function initTimerPage() {
           : 0
       const size = isDesktop() ? 480 : 320
       updateCircularProgress(timerCircle, progress, { size, strokeWidth: 12 })
+    }
+
+    // Update plant growth ring
+    if (growthRingSvg) {
+      const size = isDesktop() ? 480 : 320
+      const progress =
+        state.totalSeconds > 0
+          ? 1 - state.remainingSeconds / state.totalSeconds
+          : 0
+      updatePlantGrowthRing(growthRingSvg, { size, progress })
     }
 
     // Update button icon
