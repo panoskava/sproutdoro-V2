@@ -6,7 +6,7 @@ import {
   createCircularProgress,
   updateCircularProgress,
 } from './components/CircularProgress'
-import { getSettings, createSession, getTodaySessions, getCategories, getAllPlants, updatePlant } from './storage'
+import { getSettings, createSession, getTodaySessions, getCategories, updatePlant, getActivePlant, pickWeightedPlantType, createPlant } from './storage'
 import { createCategoryPillRow, updateCategoryPillRow } from './components/CategoryPill'
 import type { Category } from '../types'
 import { Timer } from './timer-engine'
@@ -334,27 +334,42 @@ async function initTimerPage() {
         console.error('Failed to save session:', err)
       }
 
-      // Update active plants with focus minutes
+      // Attribute session minutes to single active plant (or create new one)
       try {
-        const allPlants = await getAllPlants()
-        for (const plant of allPlants) {
-          if (!plant.sessionIds) plant.sessionIds = []
-          plant.sessionIds.push(session.id)
-          plant.totalFocusMinutes += session.duration
-          const definition = getPlantDefinition(plant.type)
+        const activePlant = await getActivePlant()
+        if (activePlant) {
+          if (!activePlant.sessionIds) activePlant.sessionIds = []
+          activePlant.sessionIds.push(session.id)
+          activePlant.totalFocusMinutes += session.duration
+
+          const definition = getPlantDefinition(activePlant.type)
           if (definition) {
-            const progressRatio = plant.totalFocusMinutes / definition.focusMinutesRequired
-            if (progressRatio >= 1 && plant.level < 5) {
-              plant.level = Math.min(5, Math.floor(progressRatio) + 1) as 1 | 2 | 3 | 4 | 5
+            const progressRatio = activePlant.totalFocusMinutes / definition.focusMinutesRequired
+            if (progressRatio >= 1 && activePlant.level < 5) {
+              activePlant.level = Math.min(5, Math.floor(progressRatio) + 1) as 1 | 2 | 3 | 4 | 5
             }
-            if (plant.level >= 5) {
-              plant.isMasterpiece = true
+            if (activePlant.level >= 5) {
+              activePlant.isMasterpiece = true
             }
           }
-          await updatePlant(plant)
+          await updatePlant(activePlant)
+        } else {
+          // No active plant — plant a new seed via weighted rarity
+          const definition = pickWeightedPlantType()
+          const newPlant: import('../types').Plant = {
+            id: crypto.randomUUID(),
+            type: definition.id,
+            rarity: definition.rarity,
+            level: 1,
+            plantedAt: Date.now(),
+            totalFocusMinutes: session.duration,
+            sessionIds: [session.id],
+            isMasterpiece: false,
+          }
+          await createPlant(newPlant)
         }
       } catch (err) {
-        console.error('Failed to update plants:', err)
+        console.error('Failed to update or create plant:', err)
       }
 
       // Update Today's Focus stat
