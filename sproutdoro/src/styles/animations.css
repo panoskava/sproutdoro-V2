@@ -11,4 +11,27 @@
   .transition-organic {
     transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
+
+  /* Growth ring milestone animations */
+  .plant-growth-svg circle {
+    transition: opacity 400ms ease-out, stroke-width 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: center;
+  }
+
+  .plant-growth-emoji {
+    transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 300ms ease-out;
+    transform-origin: center;
+    will-change: transform, opacity;
+  }
+
+  /* Respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    .plant-growth-emoji {
+      transition: opacity 200ms ease-out !important;
+      transform: scale(1) translate(-50%, -50%) !important;
+    }
+    .plant-growth-svg circle {
+      transition: opacity 200ms ease-out !important;
+    }
+  }
 }
