@@ -37,6 +37,9 @@ export function createPlantGrowthRing(props: PlantGrowthRingProps): SVGSVGElemen
   svg.style.height = '100%'
   svg.style.zIndex = '1'
 
+  svg.setAttribute('role', 'img')
+  svg.setAttribute('aria-label', 'Plant growth stage: seedling')
+
   ;(svg as any).__milestoneIndex = 0
 
   updatePlantGrowthRing(svg, props)
@@ -99,6 +102,9 @@ export function updatePlantGrowthRing(
   }
 
   ;(svg as any).__milestoneIndex = newMilestone
+
+  const stageLabels = ['seedling', 'sprout', 'growing', 'thriving', 'blooming']
+  svg.setAttribute('aria-label', `Plant growth stage: ${stageLabels[newMilestone]}`)
 }
 
 export function createGrowthEmojiElement(size: number): HTMLElement {
