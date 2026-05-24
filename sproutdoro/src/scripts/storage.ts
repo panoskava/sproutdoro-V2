@@ -218,6 +218,16 @@ export async function updatePlant(plant: Plant): Promise<void> {
   }
 }
 
+export async function getActivePlant(): Promise<Plant | undefined> {
+  try {
+    const plants = await getAllPlants()
+    return plants.find((p) => p.level < 5)
+  } catch (err) {
+    console.error('getActivePlant failed:', err)
+    return undefined
+  }
+}
+
 export async function getFeaturedPlant(): Promise<Plant | undefined> {
   try {
     const plants = await getAllPlants()
