@@ -5,16 +5,17 @@ import { createPlantCard } from './components/PlantCard'
 import { createStatCard } from './components/StatCard'
 import { createPlantingPlanModal } from './components/PlantingPlanModal'
 import { getPlantDefinition } from './plant-definitions'
-import { getAllPlants, createPlant } from './storage'
+import { getAllPlants, createPlant, getActivePlant } from './storage'
 import { applyTheme } from './theme'
 import type { Plant } from '../types'
 
-function openPlantingPlan(plants: import('../types').Plant[]) {
+function openPlantingPlan(plants: import('../types').Plant[], activePlant: import('../types').Plant | undefined) {
   const modalContainer = document.getElementById('planting-plan-modal-container')
   if (!modalContainer) return
 
   const modal = createPlantingPlanModal({
     existingPlants: plants,
+    activePlant,
     onSelect: async (definition) => {
       const plant: import('../types').Plant = {
         id: crypto.randomUUID(),
@@ -69,6 +70,9 @@ async function initGardenPage() {
   const totalFocusMinutes = plants.reduce((sum, p) => sum + p.totalFocusMinutes, 0)
   const totalFocusHours = Math.round((totalFocusMinutes / 60) * 10) / 10
 
+  // Check if there's an active plant (level < 5)
+  const activePlant = await getActivePlant()
+
   // Render stats
   const statsContainer = document.getElementById('garden-stats')
   if (statsContainer) {
@@ -115,18 +119,20 @@ async function initGardenPage() {
       gridContainer.appendChild(card)
     }
 
-    // Empty slot CTA
-    const emptyCard = document.createElement('button')
-    emptyCard.className =
-      'rounded-2xl border-2 border-dashed border-outline-variant/50 flex flex-col items-center justify-center gap-2 text-on-surface/50 hover:text-primary hover:border-primary/50 transition-all duration-200 cursor-pointer aspect-square'
-    emptyCard.innerHTML = `
-      <span class="material-symbols-outlined text-3xl">add</span>
-      <span class="font-label text-sm font-semibold">New Sprout</span>
-    `
-    emptyCard.addEventListener('click', () => {
-      openPlantingPlan(plants)
-    })
-    gridContainer.appendChild(emptyCard)
+    // Empty slot CTA (only if no active plant)
+    if (!activePlant) {
+      const emptyCard = document.createElement('button')
+      emptyCard.className =
+        'rounded-2xl border-2 border-dashed border-outline-variant/50 flex flex-col items-center justify-center gap-2 text-on-surface/50 hover:text-primary hover:border-primary/50 transition-all duration-200 cursor-pointer aspect-square'
+      emptyCard.innerHTML = `
+        <span class="material-symbols-outlined text-3xl">add</span>
+        <span class="font-label text-sm font-semibold">New Sprout</span>
+      `
+      emptyCard.addEventListener('click', () => {
+        openPlantingPlan(plants, activePlant)
+      })
+      gridContainer.appendChild(emptyCard)
+    }
   }
 
   // Separate plants into active (still growing) vs completed
@@ -191,12 +197,17 @@ async function initGardenPage() {
     }
   }
 
-  // FAB
+  // FAB (only if no active plant)
   const fab = document.getElementById('fab-new-sprout')
   if (fab) {
-    fab.addEventListener('click', () => {
-      openPlantingPlan(plants)
-    })
+    if (activePlant) {
+      fab.style.display = 'none'
+    } else {
+      fab.style.display = ''
+      fab.addEventListener('click', () => {
+        openPlantingPlan(plants, activePlant)
+      })
+    }
   }
 }
 

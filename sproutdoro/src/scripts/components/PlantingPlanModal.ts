@@ -3,6 +3,7 @@ import type { Plant } from '../../types'
 
 interface PlantingPlanModalProps {
   existingPlants: Plant[]
+  activePlant?: Plant
   onSelect: (definition: PlantDefinition) => void
   onClose: () => void
 }
