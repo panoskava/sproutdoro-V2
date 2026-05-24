@@ -4,8 +4,9 @@ import { createMobileNav } from './components/MobileNav'
 import { createRangeSlider } from './components/RangeSlider'
 import { createToggleSwitch } from './components/ToggleSwitch'
 import { createSoundCard } from './components/SoundCard'
-import { getSettings, saveSettings, DEFAULT_SETTINGS } from './storage'
+import { getSettings, saveSettings, DEFAULT_SETTINGS, getCategories } from './storage'
 import type { Settings } from '../types'
+import { createCategoryManager } from './components/CategoryManager'
 import { applyTheme, setTheme } from './theme'
 
 function updateSoundCardVisuals(card: Element, selected: boolean) {
@@ -103,6 +104,24 @@ async function initSettingsPage() {
         accentColor: '#3f5d87',
         onChange: async (value) => {
           settings.longBreakDuration = value
+          await persistSettings()
+        },
+      })
+    )
+  }
+
+  const adjustSliderContainer = document.getElementById('timer-adjust-setting')
+  if (adjustSliderContainer) {
+    adjustSliderContainer.appendChild(
+      createRangeSlider({
+        label: 'Adjust Amount',
+        min: 1,
+        max: 15,
+        value: settings.timerAdjustMinutes,
+        unit: ' min',
+        accentColor: '#76786c',
+        onChange: async (value) => {
+          settings.timerAdjustMinutes = value
           await persistSettings()
         },
       })
@@ -260,6 +279,22 @@ async function initSettingsPage() {
         },
       })
     )
+  }
+
+  // Categories
+  const categoryContainer = document.getElementById('category-manager-container')
+  if (categoryContainer) {
+    const container = categoryContainer
+    async function renderCategories() {
+      const cats = await getCategories()
+      container.innerHTML = ''
+      const manager = createCategoryManager({
+        categories: cats,
+        onCategoryChange: renderCategories,
+      })
+      container.appendChild(manager)
+    }
+    renderCategories()
   }
 
   // Reset Defaults

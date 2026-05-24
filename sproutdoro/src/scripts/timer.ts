@@ -6,10 +6,20 @@ import {
   createCircularProgress,
   updateCircularProgress,
 } from './components/CircularProgress'
-import { getSettings, createSession, getTodaySessions } from './storage'
+import { getSettings, createSession, getTodaySessions, getCategories, updatePlant, getActivePlant, pickWeightedPlantType, createPlant } from './storage'
+import { createCategoryPillRow, updateCategoryPillRow } from './components/CategoryPill'
+import type { Category } from '../types'
 import { Timer } from './timer-engine'
 import { AudioManager } from './audio'
 import { applyTheme } from './theme'
+import { createTimerAdjustButtons, updateTimerAdjustButtonsVisibility } from './components/TimerAdjustButtons'
+import { createBreakOverlay, showBreakOverlay, hideBreakOverlay, updateBreakOverlay } from './components/BreakOverlay'
+import { getPlantDefinition } from './plant-definitions'
+import {
+  createPlantGrowthRing,
+  updatePlantGrowthRing,
+  createGrowthEmojiElement,
+} from './components/PlantGrowthRing'
 
 function formatTime(totalSeconds: number): { mm: string; ss: string } {
   const mins = Math.floor(totalSeconds / 60)
@@ -24,11 +34,19 @@ const TIMER_STATE_KEY = 'sproutdoro-timer-state'
 
 interface TimerStatePersist {
   mode: 'work' | 'shortBreak' | 'longBreak'
-  state: 'idle' | 'running' | 'paused'
+  state: 'idle' | 'running' | 'paused' | 'onBreak' | 'complete'
   remainingSeconds: number
   totalSeconds: number
   sessionCount: number
   lastTick: number | null
+  adjustmentOffset: number
+  modeAtAdjustmentStart: 'work' | 'shortBreak' | 'longBreak' | null
+  breakBookmark: {
+    remainingSeconds: number
+    totalSeconds: number
+    mode: 'work' | 'shortBreak' | 'longBreak'
+    adjustmentOffset: number
+  } | null
 }
 
 function saveTimerState(state: TimerStatePersist): void {
@@ -96,6 +114,9 @@ async function initTimerPage() {
   // Render stat cards
   const statsContainer = document.getElementById('stats-row')
   let todayFocusMinutes = 0
+  let currentCategory: string | null = null
+  let sessionStartTime: number | null = null
+  let isOnImmediateBreak = false
   if (statsContainer) {
     try {
       const todaySessions = await getTodaySessions()
@@ -161,6 +182,32 @@ async function initTimerPage() {
     sessionGoalEl.textContent = `Session Goal: Deep Focus (${settings.workDuration}m)`
   }
 
+  // Load categories and render pill row
+  const categoryRowContainer = document.getElementById('category-pill-row')
+  if (categoryRowContainer) {
+    let categories: Category[] = []
+    try {
+      categories = await getCategories()
+    } catch (err) {
+      console.error('Failed to load categories:', err)
+    }
+
+    function handleCategorySelect(categoryId: string | null) {
+      currentCategory = categoryId
+      const row = document.getElementById('category-pill-row')
+      if (row) {
+        updateCategoryPillRow(row, categories, categoryId, handleCategorySelect)
+      }
+    }
+
+    const pillRow = createCategoryPillRow({
+      categories,
+      selectedCategoryId: null,
+      onSelect: handleCategorySelect,
+    })
+    categoryRowContainer.appendChild(pillRow)
+  }
+
   // Timer display elements
   const timeMins = document.getElementById('time-mins')
   const timeSecs = document.getElementById('time-secs')
@@ -187,6 +234,18 @@ async function initTimerPage() {
     timerRingContainer.appendChild(timerCircle)
   }
 
+  // Create plant growth ring + emoji inside timer glass
+  let growthRingSvg: SVGSVGElement | null = null
+  const plantGrowthCenter = document.getElementById('plant-growth-center')
+  if (plantGrowthCenter && timerRingContainer) {
+    const size = isDesktop() ? 480 : 320
+    growthRingSvg = createPlantGrowthRing({ size, progress: 0 })
+    plantGrowthCenter.appendChild(growthRingSvg)
+
+    const emojiEl = createGrowthEmojiElement(size)
+    plantGrowthCenter.appendChild(emojiEl)
+  }
+
   let timer: Timer | null = null
 
   function updateDisplay(state: import('./timer-engine').TimerState) {
@@ -204,6 +263,16 @@ async function initTimerPage() {
       updateCircularProgress(timerCircle, progress, { size, strokeWidth: 12 })
     }
 
+    // Update plant growth ring
+    if (growthRingSvg) {
+      const size = isDesktop() ? 480 : 320
+      const progress =
+        state.totalSeconds > 0
+          ? 1 - state.remainingSeconds / state.totalSeconds
+          : 0
+      updatePlantGrowthRing(growthRingSvg, { size, progress })
+    }
+
     // Update button icon
     if (startPauseBtn) {
       const icon =
@@ -214,6 +283,9 @@ async function initTimerPage() {
         <span class="material-symbols-outlined text-2xl md:text-3xl" style="font-variation-settings: 'FILL' 1, 'wght' 600;">${icon}</span>
       `
     }
+
+    const showAdjust = state.state === 'running' || state.state === 'paused'
+    updateTimerAdjustButtonsVisibility(showAdjust)
 
     // Update Session Sprout stat
     if (statsContainer && state.mode === 'work') {
@@ -231,20 +303,55 @@ async function initTimerPage() {
         }
       }
     }
+
+    const immediateBreakBtn = document.getElementById('btn-immediate-break')
+    if (immediateBreakBtn) {
+      if (state.mode === 'work' && (state.state === 'running' || state.state === 'paused')) {
+        immediateBreakBtn.classList.remove('hidden')
+        immediateBreakBtn.classList.add('md:flex')
+      } else {
+        immediateBreakBtn.classList.add('hidden')
+        immediateBreakBtn.classList.remove('md:flex')
+      }
+    }
+
+    if (state.state === 'onBreak') {
+      updateBreakOverlay(state.remainingSeconds, state.totalSeconds)
+    }
   }
 
   async function onTimerComplete(mode: string) {
     audioManager.stopAmbient()
+
+    if (mode === 'immediateBreak') {
+      if (settings.notifications && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification('Sproutdoro', {
+          body: 'Break over! Resuming focus session.',
+          icon: '/favicon.svg',
+        })
+      }
+      hideBreakOverlay()
+      timer?.resumeFromBreak()
+      isOnImmediateBreak = false
+      updateTimerAdjustButtonsVisibility(true)
+      clearTimerState()
+      return
+    }
+
     audioManager.playCompletion()
     if (mode === 'work') {
+      const timerState = timer?.getState()
+      const actualDuration = timerState
+        ? Math.round(((timerState.totalSeconds - (timerState.adjustmentOffset ?? 0)) / 60) * 10) / 10
+        : 0
       const session = {
         id: crypto.randomUUID(),
-        startTime: Date.now() - (timer?.getState().totalSeconds || 0) * 1000,
+        startTime: sessionStartTime ?? (Date.now() - ((timerState?.totalSeconds || 0) * 1000)),
         endTime: Date.now(),
-        duration: (timer?.getState().totalSeconds || 0) / 60,
+        duration: actualDuration > 0 ? actualDuration : (timerState?.totalSeconds || 0) / 60,
         type: 'work',
         plantId: null,
-        category: 'focus',
+        category: currentCategory,
         completed: true,
       } as import('../types').Session
 
@@ -252,6 +359,43 @@ async function initTimerPage() {
         await createSession(session)
       } catch (err) {
         console.error('Failed to save session:', err)
+      }
+
+      // Attribute session minutes to single active plant (or create new one)
+      try {
+        const activePlant = await getActivePlant()
+        if (activePlant) {
+          if (!activePlant.sessionIds) activePlant.sessionIds = []
+          activePlant.sessionIds.push(session.id)
+          activePlant.totalFocusMinutes += session.duration
+
+          const definition = getPlantDefinition(activePlant.type)
+          if (definition) {
+            const progressRatio = activePlant.totalFocusMinutes / definition.focusMinutesRequired
+            const newLevel = Math.min(5, Math.floor(progressRatio) + 1) as 1 | 2 | 3 | 4 | 5
+            if (newLevel > activePlant.level) {
+              activePlant.level = newLevel
+            }
+            activePlant.isMasterpiece = activePlant.level >= 5
+          }
+          await updatePlant(activePlant)
+        } else {
+          // No active plant — plant a new seed via weighted rarity
+          const definition = pickWeightedPlantType()
+          const newPlant: import('../types').Plant = {
+            id: crypto.randomUUID(),
+            type: definition.id,
+            rarity: definition.rarity,
+            level: 1,
+            plantedAt: Date.now(),
+            totalFocusMinutes: session.duration,
+            sessionIds: [session.id],
+            isMasterpiece: false,
+          }
+          await createPlant(newPlant)
+        }
+      } catch (err) {
+        console.error('Failed to update or create plant:', err)
       }
 
       // Update Today's Focus stat
@@ -322,6 +466,12 @@ async function initTimerPage() {
     }
     if (savedState.state !== 'idle' || savedState.remainingSeconds > 0) {
       timer.restoreState(savedState)
+      // If restoring an onBreak state, show the overlay
+      if (savedState.state === 'onBreak' && savedState.breakBookmark) {
+        isOnImmediateBreak = true
+        showBreakOverlay()
+        updateTimerAdjustButtonsVisibility(false)
+      }
     }
   }
 
@@ -334,8 +484,11 @@ async function initTimerPage() {
     } else {
       saveTimerState({
         ...state,
-        state: state.state as 'idle' | 'running' | 'paused',
-        lastTick: state.state === 'running' ? Date.now() : null,
+        state: state.state as 'idle' | 'running' | 'paused' | 'onBreak' | 'complete',
+        lastTick: (state.state === 'running' || state.state === 'onBreak') ? Date.now() : null,
+        adjustmentOffset: state.adjustmentOffset ?? 0,
+        modeAtAdjustmentStart: state.modeAtAdjustmentStart ?? null,
+        breakBookmark: state.breakBookmark ?? null,
       })
     }
   }
@@ -352,6 +505,9 @@ async function initTimerPage() {
         timer.pause()
         audioManager.stopAmbient()
       } else {
+        if (state.mode === 'work' && (state.state === 'idle' || state.state === 'complete')) {
+          sessionStartTime = Date.now()
+        }
         timer.start()
         if (state.mode === 'work') {
           audioManager.startAmbient(settings.sound)
@@ -363,17 +519,80 @@ async function initTimerPage() {
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
       if (!timer) return
+      if (isOnImmediateBreak) {
+        hideBreakOverlay()
+        isOnImmediateBreak = false
+      }
       timer.reset()
       audioManager.stopAmbient()
       clearTimerState()
+      updateTimerAdjustButtonsVisibility(false)
     })
   }
 
   if (skipBtn) {
     skipBtn.addEventListener('click', () => {
       if (!timer) return
+      if (isOnImmediateBreak) {
+        hideBreakOverlay()
+        isOnImmediateBreak = false
+        updateTimerAdjustButtonsVisibility(true)
+      }
       timer.skip()
       audioManager.stopAmbient()
+    })
+  }
+
+  const ADJUST_AMOUNT_MINUTES = settings.timerAdjustMinutes || 5
+  const adjustContainer = document.getElementById('timer-adjust-container')
+  if (adjustContainer) {
+    const adjustButtons = createTimerAdjustButtons({
+      onIncrement: () => {
+        if (timer) timer.adjustTime(ADJUST_AMOUNT_MINUTES * 60)
+      },
+      onDecrement: () => {
+        if (timer) timer.adjustTime(-(ADJUST_AMOUNT_MINUTES * 60))
+      },
+      adjustAmount: ADJUST_AMOUNT_MINUTES,
+      isVisible: false,
+    })
+    adjustContainer.appendChild(adjustButtons)
+  }
+
+  const breakOverlayContainer = document.getElementById('break-overlay-container')
+  if (breakOverlayContainer) {
+    const breakDurationSec = settings.shortBreakDuration * 60
+    const breakOverlay = createBreakOverlay({
+      breakDuration: breakDurationSec,
+      onBreakComplete: () => {
+        if (!timer) return
+        hideBreakOverlay()
+        timer.resumeFromBreak()
+        isOnImmediateBreak = false
+        updateTimerAdjustButtonsVisibility(true)
+      },
+      onCancelBreak: () => {
+        if (!timer) return
+        hideBreakOverlay()
+        timer.resumeFromBreak()
+        isOnImmediateBreak = false
+        updateTimerAdjustButtonsVisibility(true)
+      },
+    })
+    breakOverlayContainer.appendChild(breakOverlay)
+  }
+
+  const immediateBreakBtn = document.getElementById('btn-immediate-break')
+  if (immediateBreakBtn) {
+    immediateBreakBtn.addEventListener('click', () => {
+      if (!timer) return
+      const state = timer.getState()
+      if (state.mode !== 'work' || (state.state !== 'running' && state.state !== 'paused')) return
+      isOnImmediateBreak = true
+      const breakDurationSec = settings.shortBreakDuration * 60
+      timer.pauseForBreak(breakDurationSec)
+      showBreakOverlay()
+      updateTimerAdjustButtonsVisibility(false)
     })
   }
 }

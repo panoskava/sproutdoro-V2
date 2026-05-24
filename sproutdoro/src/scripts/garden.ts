@@ -3,9 +3,44 @@ import { createSideNav } from './components/SideNav'
 import { createMobileNav } from './components/MobileNav'
 import { createPlantCard } from './components/PlantCard'
 import { createStatCard } from './components/StatCard'
-import { getAllPlants } from './storage'
+import { createPlantingPlanModal } from './components/PlantingPlanModal'
+import { getPlantDefinition } from './plant-definitions'
+import { getAllPlants, createPlant, getActivePlant } from './storage'
 import { applyTheme } from './theme'
 import type { Plant } from '../types'
+
+function openPlantingPlan(plants: import('../types').Plant[], activePlant: import('../types').Plant | undefined) {
+  const modalContainer = document.getElementById('planting-plan-modal-container')
+  if (!modalContainer) return
+
+  const modal = createPlantingPlanModal({
+    existingPlants: plants,
+    activePlant,
+    onSelect: async (definition) => {
+      const plant: import('../types').Plant = {
+        id: crypto.randomUUID(),
+        type: definition.id,
+        rarity: definition.rarity,
+        level: 1,
+        plantedAt: Date.now(),
+        totalFocusMinutes: 0,
+        sessionIds: [],
+        isMasterpiece: false,
+      }
+      try {
+        await createPlant(plant)
+      } catch (err) {
+        console.error('Failed to create plant:', err)
+      }
+      modal.remove()
+      location.reload()
+    },
+    onClose: () => {
+      modal.remove()
+    },
+  })
+  modalContainer.appendChild(modal)
+}
 
 async function initGardenPage() {
   // Render navs
@@ -34,6 +69,9 @@ async function initGardenPage() {
   const totalPlants = plants.length
   const totalFocusMinutes = plants.reduce((sum, p) => sum + p.totalFocusMinutes, 0)
   const totalFocusHours = Math.round((totalFocusMinutes / 60) * 10) / 10
+
+  // Check if there's an active plant (level < 5)
+  const activePlant = await getActivePlant()
 
   // Render stats
   const statsContainer = document.getElementById('garden-stats')
@@ -81,26 +119,95 @@ async function initGardenPage() {
       gridContainer.appendChild(card)
     }
 
-    // Empty slot CTA
-    const emptyCard = document.createElement('button')
-    emptyCard.className =
-      'rounded-2xl border-2 border-dashed border-outline-variant/50 flex flex-col items-center justify-center gap-2 text-on-surface/50 hover:text-primary hover:border-primary/50 transition-all duration-200 cursor-pointer aspect-square'
-    emptyCard.innerHTML = `
-      <span class="material-symbols-outlined text-3xl">add</span>
-      <span class="font-label text-sm font-semibold">New Sprout</span>
-    `
-    emptyCard.addEventListener('click', () => {
-      window.location.href = './index.html'
-    })
-    gridContainer.appendChild(emptyCard)
+    // Empty slot CTA (only if no active plant)
+    if (!activePlant) {
+      const emptyCard = document.createElement('button')
+      emptyCard.className =
+        'rounded-2xl border-2 border-dashed border-outline-variant/50 flex flex-col items-center justify-center gap-2 text-on-surface/50 hover:text-primary hover:border-primary/50 transition-all duration-200 cursor-pointer aspect-square'
+      emptyCard.innerHTML = `
+        <span class="material-symbols-outlined text-3xl">add</span>
+        <span class="font-label text-sm font-semibold">New Sprout</span>
+      `
+      emptyCard.addEventListener('click', () => {
+        openPlantingPlan(plants, activePlant)
+      })
+      gridContainer.appendChild(emptyCard)
+    }
   }
 
-  // FAB
+  // Separate plants into active (still growing) vs completed
+  const activePlants = plants.filter((p) => {
+    const def = getPlantDefinition(p.type)
+    return def ? p.totalFocusMinutes < def.focusMinutesRequired : false
+  })
+
+  const activeGrowthSection = document.getElementById('active-growth-section')
+  const activeGrowthGrid = document.getElementById('active-growth-grid')
+
+  if (activeGrowthSection && activeGrowthGrid && activePlants.length > 0) {
+    activeGrowthSection.style.display = ''
+
+    for (const plant of activePlants) {
+      const def = getPlantDefinition(plant.type)
+      if (!def) continue
+
+      const progress = Math.min(1, plant.totalFocusMinutes / def.focusMinutesRequired)
+
+      const card = document.createElement('div')
+      card.className = 'stat-card-glass rounded-2xl p-4 flex items-center gap-4'
+
+      const emojiWrap = document.createElement('div')
+      emojiWrap.className = 'w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0'
+      emojiWrap.textContent = def.emoji
+
+      const info = document.createElement('div')
+      info.className = 'flex-1 min-w-0'
+
+      const name = document.createElement('div')
+      name.className = 'font-headline text-sm font-bold text-on-surface'
+      name.textContent = def.name
+
+      const progressWrap = document.createElement('div')
+      progressWrap.className = 'w-full h-2 bg-surface-container-high rounded-full overflow-hidden mt-1'
+
+      const progressBar = document.createElement('div')
+      progressBar.className = 'h-full bg-gradient-to-r from-primary to-primary-container rounded-full transition-all duration-500'
+      progressBar.style.width = `${Math.round(progress * 100)}%`
+
+      progressWrap.appendChild(progressBar)
+
+      const meta = document.createElement('div')
+      meta.className = 'flex items-center justify-between mt-1'
+      const progressText = document.createElement('span')
+      progressText.className = 'font-label text-[10px] text-on-surface/50'
+      progressText.textContent = `${Math.round(plant.totalFocusMinutes)} / ${def.focusMinutesRequired} min`
+      const pct = document.createElement('span')
+      pct.className = 'font-label text-[10px] font-semibold text-primary'
+      pct.textContent = `${Math.round(progress * 100)}%`
+      meta.appendChild(progressText)
+      meta.appendChild(pct)
+
+      info.appendChild(name)
+      info.appendChild(progressWrap)
+      info.appendChild(meta)
+
+      card.appendChild(emojiWrap)
+      card.appendChild(info)
+      activeGrowthGrid.appendChild(card)
+    }
+  }
+
+  // FAB (only if no active plant)
   const fab = document.getElementById('fab-new-sprout')
   if (fab) {
-    fab.addEventListener('click', () => {
-      window.location.href = './index.html'
-    })
+    if (activePlant) {
+      fab.style.display = 'none'
+    } else {
+      fab.style.display = ''
+      fab.addEventListener('click', () => {
+        openPlantingPlan(plants, activePlant)
+      })
+    }
   }
 }
 

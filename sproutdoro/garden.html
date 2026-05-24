@@ -75,6 +75,21 @@
           <div id="featured-plant"></div>
         </section>
 
+        <!-- Active Growth -->
+        <section id="active-growth-section" class="mb-6 md:mb-10" style="display:none;">
+          <div class="flex items-center gap-3 mb-4">
+            <h2 class="font-headline text-lg font-bold text-on-surface">
+              Currently Growing
+            </h2>
+            <span
+              class="inline-flex px-3 py-1 rounded-full text-xs font-label font-semibold bg-primary/10 text-primary"
+            >
+              Active
+            </span>
+          </div>
+          <div id="active-growth-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </section>
+
         <!-- Plant Collection -->
         <section class="flex-1">
           <h2 class="font-headline text-lg font-bold text-on-surface mb-4">
@@ -104,6 +119,9 @@
 
     <!-- MobileNav container (injected by JS) -->
     <div id="mobile-nav"></div>
+
+    <!-- Planting plan modal container -->
+    <div id="planting-plan-modal-container"></div>
 
     <script type="module" src="/src/scripts/garden.ts"></script>
   </body>
