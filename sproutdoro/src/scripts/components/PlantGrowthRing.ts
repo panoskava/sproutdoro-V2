@@ -95,8 +95,15 @@ export function updatePlantGrowthRing(
   let emojiEl = svg.parentElement?.querySelector('.plant-growth-emoji') as HTMLElement | null
   if (emojiEl) {
     const stage = EMOJI_STAGES[newMilestone]
-    emojiEl.textContent = stage.emoji
-    emojiEl.style.transform = `translate(-50%, -50%) scale(${stage.scale})`
+
+    // Update the bounce-wrapped inner text
+    const bounceEl = emojiEl.querySelector('.animate-bounce-subtle') as HTMLElement | null
+    if (bounceEl) {
+      bounceEl.textContent = stage.emoji
+    }
+
+    // Update scale/opacity on the centered element (flexbox handles centering)
+    emojiEl.style.transform = `scale(${stage.scale})`
     emojiEl.style.opacity = `${stage.opacity}`
     emojiEl.style.transition = 'transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 300ms ease-out'
   }
@@ -108,19 +115,23 @@ export function updatePlantGrowthRing(
 }
 
 export function createGrowthEmojiElement(size: number): HTMLElement {
-  const el = document.createElement('span')
-  el.className = 'plant-growth-emoji animate-bounce-subtle'
-  el.style.position = 'absolute'
-  el.style.top = '50%'
-  el.style.left = '50%'
-  el.style.transform = 'translate(-50%, -50%) scale(0.85)'
-  el.style.fontSize = `${Math.round(size * 0.18)}px`
-  el.style.opacity = '0.7'
-  el.style.zIndex = '2'
-  el.style.pointerEvents = 'none'
-  el.style.display = 'flex'
-  el.style.alignItems = 'center'
-  el.style.justifyContent = 'center'
-  el.textContent = '🌱'
-  return el
+  // Outer element: flex-centered by parent (#plant-growth-center), scale from JS update.
+  const scaleEl = document.createElement('span')
+  scaleEl.className = 'plant-growth-emoji'
+  scaleEl.style.fontSize = `${Math.round(size * 0.18)}px`
+  scaleEl.style.opacity = '0.7'
+  scaleEl.style.zIndex = '2'
+  scaleEl.style.pointerEvents = 'none'
+  scaleEl.style.transition = 'transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 300ms ease-out'
+  scaleEl.style.display = 'flex'
+  scaleEl.style.alignItems = 'center'
+  scaleEl.style.justifyContent = 'center'
+
+  // Inner element: bounce animation ONLY on the emoji content.
+  const bounceEl = document.createElement('span')
+  bounceEl.className = 'animate-bounce-subtle'
+  bounceEl.textContent = '🌱'
+
+  scaleEl.appendChild(bounceEl)
+  return scaleEl
 }
