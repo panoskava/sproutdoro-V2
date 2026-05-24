@@ -345,12 +345,11 @@ async function initTimerPage() {
           const definition = getPlantDefinition(activePlant.type)
           if (definition) {
             const progressRatio = activePlant.totalFocusMinutes / definition.focusMinutesRequired
-            if (progressRatio >= 1 && activePlant.level < 5) {
-              activePlant.level = Math.min(5, Math.floor(progressRatio) + 1) as 1 | 2 | 3 | 4 | 5
+            const newLevel = Math.min(5, Math.floor(progressRatio) + 1) as 1 | 2 | 3 | 4 | 5
+            if (newLevel > activePlant.level) {
+              activePlant.level = newLevel
             }
-            if (activePlant.level >= 5) {
-              activePlant.isMasterpiece = true
-            }
+            activePlant.isMasterpiece = activePlant.level >= 5
           }
           await updatePlant(activePlant)
         } else {
