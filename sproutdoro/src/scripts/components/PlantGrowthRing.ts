@@ -96,7 +96,7 @@ export function updatePlantGrowthRing(
   if (emojiEl) {
     const stage = EMOJI_STAGES[newMilestone]
     emojiEl.textContent = stage.emoji
-    emojiEl.style.transform = `scale(${stage.scale})`
+    emojiEl.style.transform = `translate(-50%, -50%) scale(${stage.scale})`
     emojiEl.style.opacity = `${stage.opacity}`
     emojiEl.style.transition = 'transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 300ms ease-out'
   }
