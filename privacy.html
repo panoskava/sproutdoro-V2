@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#516233" />
+    <title>Privacy Policy — Sproutdoro</title>
+    <link rel="stylesheet" href="/src/styles/main.css" />
+  </head>
+  <body class="bg-background min-h-screen overflow-x-hidden">
+    <div id="app-content" class="invisible relative z-10 flex min-h-screen">
+      <div id="side-nav"></div>
+      <main class="flex-1 flex flex-col px-4 py-6 md:px-8 md:py-8 pb-28 md:pb-8 min-h-screen max-w-3xl">
+        <header class="mb-8">
+          <h1 class="font-headline text-2xl md:text-3xl font-bold text-on-surface">Privacy Policy</h1>
+          <p class="font-label text-sm text-on-surface/50 mt-2">Last updated: June 2026</p>
+        </header>
+
+        <article class="prose-legal flex flex-col gap-6 font-body text-sm text-on-surface/80 leading-relaxed">
+          <section>
+            <h2 class="font-headline text-lg font-bold text-on-surface mb-2">Local-only data</h2>
+            <p>Sproutdoro stores all your data locally in your browser using IndexedDB. We do not operate servers that collect, store, or process your personal information. Your focus sessions, garden plants, settings, and categories never leave your device unless you explicitly export them.</p>
+          </section>
+
+          <section>
+            <h2 class="font-headline text-lg font-bold text-on-surface mb-2">No cookies or analytics</h2>
+            <p>We do not use cookies, third-party analytics, or tracking pixels. Onboarding and install preferences are stored in your browser's localStorage only.</p>
+          </section>
+
+          <section>
+            <h2 class="font-headline text-lg font-bold text-on-surface mb-2">Self-hosted fonts</h2>
+            <p>Typography and icons are served from the app bundle. No requests are made to Google Fonts or other third-party font CDNs.</p>
+          </section>
+
+          <section>
+            <h2 class="font-headline text-lg font-bold text-on-surface mb-2">Browser notifications</h2>
+            <p>If you enable notifications in Settings, Sproutdoro uses the browser's Notification API to alert you when sessions complete. Permission is requested only when you turn this on, and notifications are sent locally on your device.</p>
+          </section>
+
+          <section>
+            <h2 class="font-headline text-lg font-bold text-on-surface mb-2">Export and import</h2>
+            <p>You can export your data as a JSON file and import it on another device or browser. You control where that file is stored.</p>
+          </section>
+
+          <section>
+            <h2 class="font-headline text-lg font-bold text-on-surface mb-2">Contact</h2>
+            <p>Questions or concerns? Open an issue on <a href="https://github.com/panoskava/sproutdoro-V2/issues" class="text-primary hover:underline" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+          </section>
+        </article>
+
+        <div id="site-footer"></div>
+      </main>
+    </div>
+    <div id="mobile-nav"></div>
+    <script type="module" src="/src/scripts/legal.ts"></script>
+  </body>
+</html>
