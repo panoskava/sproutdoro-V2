@@ -35,20 +35,10 @@
       <main
         class="flex-1 flex flex-col items-center max-w-xl mx-auto px-4 py-4 md:py-8 pb-28 md:pb-8 min-h-screen w-full"
       >
-        <!-- Top header row: Session Dots + Coffee Break Button -->
-        <header class="w-full flex items-center justify-between py-2 mb-4">
-          <div class="w-8"></div>
+        <!-- Top header row: Session Dots -->
+        <header class="w-full flex items-center justify-center py-2 mb-4">
           <!-- 5 session dots -->
           <div id="session-dots-container"></div>
-          <!-- Quick break coffee icon button -->
-          <button
-            id="btn-quick-break"
-            class="w-10 h-10 rounded-2xl glass-sage flex items-center justify-center text-on-surface/70 hover:text-on-surface transition-all duration-200"
-            title="Take a break"
-            aria-label="Take an immediate break"
-          >
-            <span class="material-symbols-outlined text-xl">coffee</span>
-          </button>
         </header>
 
         <!-- What's your focus section -->
@@ -112,7 +102,7 @@
             </div>
           </div>
 
-          <!-- Adjust buttons container -->
+          <!-- Adjust buttons container (+3m / -3m) -->
           <div id="timer-adjust-container" class="flex items-center justify-center mt-1 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
         </section>
 
@@ -127,11 +117,19 @@
             <span id="primary-action-label">START SESSION</span>
           </button>
 
-          <!-- Secondary Actions: Reset & Skip -->
-          <div id="timer-controls" class="flex items-center gap-4">
+          <!-- Control Bar Actions: Break, Reset, Skip -->
+          <div id="timer-controls" class="flex items-center gap-3">
+            <button
+              id="btn-control-break"
+              class="px-3.5 py-2 rounded-xl text-on-surface/60 hover:text-on-surface font-label text-xs font-semibold flex items-center gap-1 transition-all"
+              title="Take a break"
+            >
+              <span class="material-symbols-outlined text-base">coffee</span>
+              Break
+            </button>
             <button
               id="btn-reset"
-              class="px-4 py-2 rounded-xl text-on-surface/60 hover:text-on-surface font-label text-xs font-semibold flex items-center gap-1 transition-all"
+              class="px-3.5 py-2 rounded-xl text-on-surface/60 hover:text-on-surface font-label text-xs font-semibold flex items-center gap-1 transition-all"
               title="Reset"
             >
               <span class="material-symbols-outlined text-base">restart_alt</span>
@@ -139,7 +137,7 @@
             </button>
             <button
               id="btn-skip"
-              class="px-4 py-2 rounded-xl text-on-surface/60 hover:text-on-surface font-label text-xs font-semibold flex items-center gap-1 transition-all"
+              class="px-3.5 py-2 rounded-xl text-on-surface/60 hover:text-on-surface font-label text-xs font-semibold flex items-center gap-1 transition-all"
               title="Skip"
             >
               <span>Skip</span>
@@ -150,19 +148,10 @@
           </div>
         </section>
 
-        <!-- Stats row (collapsible/subtle on mobile) -->
-        <section
-          id="stats-row"
-          class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full mt-6"
-        ></section>
-
         <div id="site-footer"></div>
       </main>
     </div>
     </div>
-
-    <!-- Floating Notification Banner -->
-    <div id="notification-banner-container"></div>
 
     <!-- MobileNav container (injected by JS) -->
     <div id="mobile-nav"></div>

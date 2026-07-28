@@ -22,7 +22,12 @@ import { getPlantDefinition } from './plant-definitions'
 
 import { createSessionDots, updateSessionDots } from './components/SessionDots'
 import { createClockDial, updateClockDial } from './components/ClockDial'
-import { createNotificationBanner, updateNotificationBanner } from './components/NotificationBanner'
+import {
+  requestNotificationPermission,
+  setupMediaSession,
+  updateMediaSessionState,
+  showSystemNotification,
+} from './notifications'
 
 function formatTime(totalSeconds: number): { mm: string; ss: string } {
   const mins = Math.floor(totalSeconds / 60)
@@ -244,48 +249,48 @@ async function initTimerPage() {
     clockDialContainer.appendChild(clockDialSvg)
   }
 
-  // Render notification banner
-  const notificationBannerContainer = document.getElementById('notification-banner-container')
-  let notificationBannerEl: HTMLElement | null = null
-  if (notificationBannerContainer) {
-    notificationBannerEl = createNotificationBanner({
-      onPauseResume: () => {
-        if (!timer) return
-        const state = timer.getState()
-        if (state.state === 'running') {
-          timer.pause()
-          audioManager.stopAmbient()
-        } else {
-          timer.start()
-          if (state.mode === 'work') {
-            audioManager.startAmbient(settings.sound)
-          }
-        }
-      },
-      onImmediateBreak: () => {
-        if (!timer) return
-        const state = timer.getState()
-        if (state.mode !== 'work' || (state.state !== 'running' && state.state !== 'paused')) return
+  requestNotificationPermission()
+
+  setupMediaSession({
+    onPlay: () => {
+      if (!timer) return
+      const state = timer.getState()
+      if (state.state !== 'running') {
+        timer.start()
+        if (state.mode === 'work') audioManager.startAmbient(settings.sound)
+      }
+    },
+    onPause: () => {
+      if (!timer) return
+      const state = timer.getState()
+      if (state.state === 'running') {
+        timer.pause()
+        audioManager.stopAmbient()
+      }
+    },
+    onSkip: () => {
+      if (!timer) return
+      timer.skip()
+      audioManager.stopAmbient()
+    },
+    onBreak: () => {
+      if (!timer) return
+      const state = timer.getState()
+      if (state.mode === 'work' && (state.state === 'running' || state.state === 'paused')) {
         isOnImmediateBreak = true
         const breakDurationSec = settings.shortBreakDuration * 60
         timer.pauseForBreak(breakDurationSec)
         showBreakOverlay()
-        updateTimerAdjustButtonsVisibility(false)
-      },
-      onSkip: () => {
-        if (!timer) return
-        timer.skip()
-        audioManager.stopAmbient()
-      },
-    })
-    notificationBannerContainer.appendChild(notificationBannerEl)
-  }
+        updateTimerAdjustButtonsVisibility(true)
+      }
+    },
+  })
 
   const intentionInput = document.getElementById('intention-input') as HTMLInputElement | null
   const primaryActionBtn = document.getElementById('btn-primary-action')
   const primaryActionIcon = document.getElementById('primary-action-icon')
   const primaryActionLabel = document.getElementById('primary-action-label')
-  const quickBreakBtn = document.getElementById('btn-quick-break')
+  const controlBreakBtn = document.getElementById('btn-control-break')
 
   function formatClockTime(date: Date): string {
     const h = String(date.getHours()).padStart(2, '0')
@@ -350,18 +355,15 @@ async function initTimerPage() {
       }
     }
 
-    // Update Notification Banner
-    if (notificationBannerEl) {
-      updateNotificationBanner(notificationBannerEl, {
-        isRunning: state.state === 'running',
-        isPaused: state.state === 'paused',
-        mode: state.mode,
-        formattedTime: `${mm}:${ss}`,
-        intention: intentionInput?.value?.trim() || undefined,
-      })
-    }
+    // Update Media Session OS Notification
+    updateMediaSessionState(
+      state.state,
+      state.mode,
+      `${mm}:${ss}`,
+      intentionInput?.value?.trim() || undefined
+    )
 
-    const showAdjust = state.state === 'running' || state.state === 'paused'
+    const showAdjust = state.state === 'running' || state.state === 'paused' || state.state === 'onBreak'
     updateTimerAdjustButtonsVisibility(showAdjust)
 
     // Update Session Sprout stat
@@ -399,12 +401,7 @@ async function initTimerPage() {
     audioManager.stopAmbient()
 
     if (mode === 'immediateBreak') {
-      if (settings.notifications && 'Notification' in window && Notification.permission === 'granted') {
-        new Notification('Sproutdoro', {
-          body: 'Break over! Resuming focus session.',
-          icon: faviconUrl,
-        })
-      }
+      showSystemNotification('Sproutdoro', 'Break over! Resuming focus session.')
       hideBreakOverlay()
       timer?.resumeFromBreak()
       isOnImmediateBreak = false
@@ -415,6 +412,7 @@ async function initTimerPage() {
 
     audioManager.playCompletion()
     if (mode === 'work') {
+      showSystemNotification('Session Complete! 🌱', 'Great focus session! Time to take a break.')
       markFirstSessionComplete()
       const timerState = timer?.getState()
       const actualDuration = timerState
@@ -599,8 +597,8 @@ async function initTimerPage() {
     startPauseBtn.addEventListener('click', handleTogglePlay)
   }
 
-  if (quickBreakBtn) {
-    quickBreakBtn.addEventListener('click', () => {
+  if (controlBreakBtn) {
+    controlBreakBtn.addEventListener('click', () => {
       if (!timer) return
       const state = timer.getState()
       if (state.mode !== 'work' || (state.state !== 'running' && state.state !== 'paused')) return
@@ -608,7 +606,7 @@ async function initTimerPage() {
       const breakDurationSec = settings.shortBreakDuration * 60
       timer.pauseForBreak(breakDurationSec)
       showBreakOverlay()
-      updateTimerAdjustButtonsVisibility(false)
+      updateTimerAdjustButtonsVisibility(true)
     })
   }
 
@@ -639,7 +637,7 @@ async function initTimerPage() {
     })
   }
 
-  const ADJUST_AMOUNT_MINUTES = settings.timerAdjustMinutes || 5
+  const ADJUST_AMOUNT_MINUTES = 3
   const adjustContainer = document.getElementById('timer-adjust-container')
   if (adjustContainer) {
     const adjustButtons = createTimerAdjustButtons({
