@@ -21,16 +21,62 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-background: #fdf9ef;
+  --color-on-background: #1c1c16;
+  --color-surface: #fdf9ef;
+  --color-on-surface: #1c1c16;
+  --color-surface-container-low: #f7f3e9;
+  --color-surface-container: #f1eee4;
+  --color-surface-container-high: #ece8de;
+  --color-surface-container-highest: #e6e2d8;
+  --color-primary: #516233;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #697b49;
+  --color-on-primary-container: #faffe8;
+  --color-secondary: #934a29;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #fd9e77;
+  --color-tertiary: #3f5d87;
+  --color-outline: #76786c;
+  --color-outline-variant: #c6c8ba;
+  --color-on-surface-variant: #45483d;
+  --color-error: #ba1a1a;
+}
+
+.dark {
+  --color-background: #121510;
+  --color-on-background: #f0ebd9;
+  --color-surface: #181d15;
+  --color-on-surface: #f0ebd9;
+  --color-surface-container-low: #1c2219;
+  --color-surface-container: #22291f;
+  --color-surface-container-high: #2a3327;
+  --color-surface-container-highest: #333d2e;
+  --color-primary: #8cb158;
+  --color-on-primary: #121c05;
+  --color-primary-container: #3a4b21;
+  --color-on-primary-container: #d6eaaf;
+  --color-secondary: #e07a48;
+  --color-on-secondary: #2c0e00;
+  --color-secondary-container: #5c280e;
+  --color-tertiary: #7ca5de;
+  --color-outline: #8e9282;
+  --color-outline-variant: #3e4438;
+  --color-on-surface-variant: #c4c8b8;
+  --color-error: #ffb4ab;
+}
+
 @layer base {
   body {
     font-family: 'Be Vietnam Pro', sans-serif;
-    color: #1c1c16;
-    background-color: #fdf9ef;
+    color: var(--color-on-surface);
+    background-color: var(--color-background);
   }
 
   .dark body {
-    color: #e6e1d6;
-    background-color: #1a1c16;
+    color: var(--color-on-surface);
+    background-color: var(--color-background);
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -38,7 +84,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid #516233;
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
 }

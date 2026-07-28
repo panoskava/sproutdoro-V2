@@ -18,6 +18,7 @@ export interface Session {
   type: 'work' | 'shortBreak' | 'longBreak'
   plantId: string | null
   category: string | null
+  intention?: string
   completed: boolean
 }
 

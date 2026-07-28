@@ -10,10 +10,6 @@ import { initInstallBanner, markFirstSessionComplete } from './components/Instal
 import { bootstrapPage } from './init'
 import { setPageMeta } from './meta'
 import { parseTimerState, type TimerStatePersist } from './validation'
-import {
-  createCircularProgress,
-  updateCircularProgress,
-} from './components/CircularProgress'
 import { getSettings, createSession, getTodaySessions, getCategories, updatePlant, getActivePlant, pickWeightedPlantType, createPlant } from './storage'
 import { createCategoryPillRow, updateCategoryPillRow } from './components/CategoryPill'
 import type { Category } from '../types'
@@ -23,11 +19,10 @@ import { applyTheme } from './theme'
 import { createTimerAdjustButtons, updateTimerAdjustButtonsVisibility } from './components/TimerAdjustButtons'
 import { createBreakOverlay, showBreakOverlay, hideBreakOverlay, updateBreakOverlay } from './components/BreakOverlay'
 import { getPlantDefinition } from './plant-definitions'
-import {
-  createPlantGrowthRing,
-  updatePlantGrowthRing,
-  createGrowthEmojiElement,
-} from './components/PlantGrowthRing'
+
+import { createSessionDots, updateSessionDots } from './components/SessionDots'
+import { createClockDial, updateClockDial } from './components/ClockDial'
+import { createNotificationBanner, updateNotificationBanner } from './components/NotificationBanner'
 
 function formatTime(totalSeconds: number): { mm: string; ss: string } {
   const mins = Math.floor(totalSeconds / 60)
@@ -230,39 +225,80 @@ async function initTimerPage() {
   // Timer display elements
   const timeMins = document.getElementById('time-mins')
   const timeSecs = document.getElementById('time-secs')
-  const timerRingContainer = document.getElementById('timer-ring')
   const startPauseBtn = document.getElementById('btn-start-pause')
   const resetBtn = document.getElementById('btn-reset')
   const skipBtn = document.getElementById('btn-skip')
 
-  // Create progress ring
-  let timerCircle: SVGSVGElement | null = null
-  if (timerRingContainer) {
-    const size = isDesktop() ? 480 : 320
-    timerCircle = createCircularProgress({
-      size,
-      strokeWidth: 12,
-      progress: 0,
-      color: '#516233',
-      trackColor: 'rgba(81, 98, 51, 0.1)',
-      showSunDot: true,
-      sunDotColor: '#fd9e77',
-    })
-    timerCircle.style.width = '100%'
-    timerCircle.style.height = '100%'
-    timerRingContainer.appendChild(timerCircle)
+  // Render session dots
+  const sessionDotsContainer = document.getElementById('session-dots-container')
+  if (sessionDotsContainer) {
+    sessionDotsContainer.appendChild(createSessionDots(0, 5))
   }
 
-  // Create plant growth ring + emoji inside timer glass
-  let growthRingSvg: SVGSVGElement | null = null
-  const plantGrowthCenter = document.getElementById('plant-growth-center')
-  if (plantGrowthCenter && timerRingContainer) {
-    const size = isDesktop() ? 480 : 320
-    growthRingSvg = createPlantGrowthRing({ size, progress: 0 })
-    plantGrowthCenter.appendChild(growthRingSvg)
+  // Render clock dial SVG
+  const clockDialContainer = document.getElementById('clock-dial-container')
+  let clockDialSvg: SVGSVGElement | null = null
+  if (clockDialContainer) {
+    const size = isDesktop() ? 360 : 280
+    clockDialSvg = createClockDial({ size, progress: 0, accentColor: '#516233' })
+    clockDialContainer.appendChild(clockDialSvg)
+  }
 
-    const emojiEl = createGrowthEmojiElement(size)
-    plantGrowthCenter.appendChild(emojiEl)
+  // Render notification banner
+  const notificationBannerContainer = document.getElementById('notification-banner-container')
+  let notificationBannerEl: HTMLElement | null = null
+  if (notificationBannerContainer) {
+    notificationBannerEl = createNotificationBanner({
+      onPauseResume: () => {
+        if (!timer) return
+        const state = timer.getState()
+        if (state.state === 'running') {
+          timer.pause()
+          audioManager.stopAmbient()
+        } else {
+          timer.start()
+          if (state.mode === 'work') {
+            audioManager.startAmbient(settings.sound)
+          }
+        }
+      },
+      onImmediateBreak: () => {
+        if (!timer) return
+        const state = timer.getState()
+        if (state.mode !== 'work' || (state.state !== 'running' && state.state !== 'paused')) return
+        isOnImmediateBreak = true
+        const breakDurationSec = settings.shortBreakDuration * 60
+        timer.pauseForBreak(breakDurationSec)
+        showBreakOverlay()
+        updateTimerAdjustButtonsVisibility(false)
+      },
+      onSkip: () => {
+        if (!timer) return
+        timer.skip()
+        audioManager.stopAmbient()
+      },
+    })
+    notificationBannerContainer.appendChild(notificationBannerEl)
+  }
+
+  const intentionInput = document.getElementById('intention-input') as HTMLInputElement | null
+  const primaryActionBtn = document.getElementById('btn-primary-action')
+  const primaryActionIcon = document.getElementById('primary-action-icon')
+  const primaryActionLabel = document.getElementById('primary-action-label')
+  const quickBreakBtn = document.getElementById('btn-quick-break')
+
+  function formatClockTime(date: Date): string {
+    const h = String(date.getHours()).padStart(2, '0')
+    const m = String(date.getMinutes()).padStart(2, '0')
+    return `${h}:${m}`
+  }
+
+  function updateTimeRangePill(remainingSeconds: number) {
+    const pill = document.getElementById('time-range-pill')
+    if (!pill) return
+    const now = new Date()
+    const endTime = new Date(now.getTime() + remainingSeconds * 1000)
+    pill.textContent = `${formatClockTime(now)} → ${formatClockTime(endTime)}`
   }
 
   let timer: Timer | null = null
@@ -281,35 +317,48 @@ async function initTimerPage() {
       document.title = 'Sproutdoro - Focus Timer'
     }
 
-    // Update progress ring
-    if (timerCircle) {
-      const progress =
-        state.totalSeconds > 0
-          ? 1 - state.remainingSeconds / state.totalSeconds
-          : 0
-      const size = isDesktop() ? 480 : 320
-      updateCircularProgress(timerCircle, progress, { size, strokeWidth: 12 })
+    const progress =
+      state.totalSeconds > 0
+        ? 1 - state.remainingSeconds / state.totalSeconds
+        : 0
+
+    // Update Session Dots
+    if (sessionDotsContainer) {
+      updateSessionDots(sessionDotsContainer, state.sessionCount, 5)
     }
 
-    // Update plant growth ring
-    if (growthRingSvg) {
-      const size = isDesktop() ? 480 : 320
-      const progress =
-        state.totalSeconds > 0
-          ? 1 - state.remainingSeconds / state.totalSeconds
-          : 0
-      updatePlantGrowthRing(growthRingSvg, { size, progress })
+    // Update Clock Dial
+    if (clockDialSvg) {
+      const accentColor = state.mode === 'work' ? '#516233' : state.mode === 'shortBreak' ? '#934a29' : '#3f5d87'
+      updateClockDial(clockDialSvg, progress, accentColor)
     }
 
-    // Update button icon
-    if (startPauseBtn) {
-      const icon =
-        state.state === 'running'
-          ? 'pause'
-          : 'play_arrow'
-      startPauseBtn.innerHTML = `
-        <span class="material-symbols-outlined text-2xl md:text-3xl" style="font-variation-settings: 'FILL' 1, 'wght' 600;">${icon}</span>
-      `
+    // Update Time Range Pill
+    updateTimeRangePill(state.remainingSeconds)
+
+    // Update Primary Action Button
+    if (primaryActionLabel && primaryActionIcon) {
+      if (state.state === 'running') {
+        primaryActionLabel.textContent = 'PAUSE SESSION'
+        primaryActionIcon.textContent = 'pause'
+      } else if (state.state === 'paused') {
+        primaryActionLabel.textContent = 'RESUME SESSION'
+        primaryActionIcon.textContent = 'play_arrow'
+      } else {
+        primaryActionLabel.textContent = state.mode === 'work' ? 'START SESSION' : 'START BREAK'
+        primaryActionIcon.textContent = 'play_arrow'
+      }
+    }
+
+    // Update Notification Banner
+    if (notificationBannerEl) {
+      updateNotificationBanner(notificationBannerEl, {
+        isRunning: state.state === 'running',
+        isPaused: state.state === 'paused',
+        mode: state.mode,
+        formattedTime: `${mm}:${ss}`,
+        intention: intentionInput?.value?.trim() || undefined,
+      })
     }
 
     const showAdjust = state.state === 'running' || state.state === 'paused'
@@ -329,17 +378,6 @@ async function initTimerPage() {
             valueEl.textContent = 'Ready'
           }
         }
-      }
-    }
-
-    const immediateBreakBtn = document.getElementById('btn-immediate-break')
-    if (immediateBreakBtn) {
-      if (state.mode === 'work' && (state.state === 'running' || state.state === 'paused')) {
-        immediateBreakBtn.classList.remove('hidden')
-        immediateBreakBtn.classList.add('md:flex')
-      } else {
-        immediateBreakBtn.classList.add('hidden')
-        immediateBreakBtn.classList.remove('md:flex')
       }
     }
 
@@ -390,6 +428,7 @@ async function initTimerPage() {
         type: 'work',
         plantId: null,
         category: currentCategory,
+        intention: intentionInput?.value?.trim() || undefined,
         completed: true,
       } as import('../types').Session
 
@@ -535,22 +574,41 @@ async function initTimerPage() {
   updateDisplayWithSave(timer.getState())
 
   // Button handlers
+  const handleTogglePlay = () => {
+    if (!timer) return
+    const state = timer.getState()
+    if (state.state === 'running') {
+      timer.pause()
+      audioManager.stopAmbient()
+    } else {
+      if (state.mode === 'work' && (state.state === 'idle' || state.state === 'complete')) {
+        sessionStartTime = Date.now()
+      }
+      timer.start()
+      if (state.mode === 'work') {
+        audioManager.startAmbient(settings.sound)
+      }
+    }
+  }
+
+  if (primaryActionBtn) {
+    primaryActionBtn.addEventListener('click', handleTogglePlay)
+  }
+
   if (startPauseBtn) {
-    startPauseBtn.addEventListener('click', () => {
+    startPauseBtn.addEventListener('click', handleTogglePlay)
+  }
+
+  if (quickBreakBtn) {
+    quickBreakBtn.addEventListener('click', () => {
       if (!timer) return
       const state = timer.getState()
-      if (state.state === 'running') {
-        timer.pause()
-        audioManager.stopAmbient()
-      } else {
-        if (state.mode === 'work' && (state.state === 'idle' || state.state === 'complete')) {
-          sessionStartTime = Date.now()
-        }
-        timer.start()
-        if (state.mode === 'work') {
-          audioManager.startAmbient(settings.sound)
-        }
-      }
+      if (state.mode !== 'work' || (state.state !== 'running' && state.state !== 'paused')) return
+      isOnImmediateBreak = true
+      const breakDurationSec = settings.shortBreakDuration * 60
+      timer.pauseForBreak(breakDurationSec)
+      showBreakOverlay()
+      updateTimerAdjustButtonsVisibility(false)
     })
   }
 
