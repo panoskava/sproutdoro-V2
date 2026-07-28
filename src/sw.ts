@@ -85,7 +85,7 @@ self.addEventListener('message', (event) => {
       silent: true,
       icon: 'icons/icon-192x192.png',
       badge: 'icons/icon-192x192.png',
-      data: { url: './index.html' },
+      data: { url: self.registration.scope },
       actions,
     }
 
@@ -98,11 +98,9 @@ self.addEventListener('notificationclick', (event) => {
   const action = event.action
   const notification = event.notification
 
-  // Always close notification on interaction
-  notification.close()
-
-  // Action button tap: broadcast action to PWA client windows
+  // Action button tap: send command in background WITHOUT opening/launching browser window
   if (action) {
+    notification.close()
     event.waitUntil(
       self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
         for (const client of clientList) {
@@ -113,16 +111,21 @@ self.addEventListener('notificationclick', (event) => {
     return
   }
 
-  // Body tap: focus or open PWA app window
+  // Notification body tap: focus or open the standalone PWA app window (not browser tab)
+  notification.close()
+  const pwaScope = self.registration.scope
+
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // 1. Try to focus an existing window matching PWA scope
       for (const client of clientList) {
-        if ('focus' in client) {
+        if (client.url.startsWith(pwaScope) && 'focus' in client) {
           return client.focus()
         }
       }
+      // 2. If no window open, launch standalone PWA app via scope URL
       if (self.clients.openWindow) {
-        return self.clients.openWindow('./index.html')
+        return self.clients.openWindow(pwaScope)
       }
     })
   )
