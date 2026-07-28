@@ -22,7 +22,7 @@ import { getPlantDefinition } from './plant-definitions'
 
 import { createSessionDots, updateSessionDots } from './components/SessionDots'
 import { createClockDial, updateClockDial } from './components/ClockDial'
-import { setupMediaSession, updateMediaSession } from './media-session-manager'
+import { setupMediaSession, updateMediaSession, startSilentPlayback } from './media-session-manager'
 
 function formatTime(totalSeconds: number): { mm: string; ss: string } {
   const mins = Math.floor(totalSeconds / 60)
@@ -573,6 +573,9 @@ async function initTimerPage() {
       if (state.mode === 'work' && (state.state === 'idle' || state.state === 'complete')) {
         sessionStartTime = Date.now()
       }
+      // Start silent audio INSIDE the user gesture so browsers allow playback
+      // and display the OS media notification (lock screen / notification shade)
+      startSilentPlayback()
       timer.start()
       if (state.mode === 'work') {
         audioManager.startAmbient(settings.sound)
