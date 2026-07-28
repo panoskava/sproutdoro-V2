@@ -22,12 +22,7 @@ import { getPlantDefinition } from './plant-definitions'
 
 import { createSessionDots, updateSessionDots } from './components/SessionDots'
 import { createClockDial, updateClockDial } from './components/ClockDial'
-import {
-  requestNotificationPermission,
-  setupMediaSession,
-  updateMediaSessionState,
-  showSystemNotification,
-} from './notifications'
+import { setupMediaSession, updateMediaSession } from './media-session-manager'
 
 function formatTime(totalSeconds: number): { mm: string; ss: string } {
   const mins = Math.floor(totalSeconds / 60)
@@ -249,8 +244,6 @@ async function initTimerPage() {
     clockDialContainer.appendChild(clockDialSvg)
   }
 
-  requestNotificationPermission()
-
   setupMediaSession({
     onPlay: () => {
       if (!timer) return
@@ -356,7 +349,7 @@ async function initTimerPage() {
     }
 
     // Update Media Session OS Notification
-    updateMediaSessionState(
+    updateMediaSession(
       state.state,
       state.mode,
       `${mm}:${ss}`,
@@ -401,7 +394,6 @@ async function initTimerPage() {
     audioManager.stopAmbient()
 
     if (mode === 'immediateBreak') {
-      showSystemNotification('Sproutdoro', 'Break over! Resuming focus session.')
       hideBreakOverlay()
       timer?.resumeFromBreak()
       isOnImmediateBreak = false
@@ -412,7 +404,6 @@ async function initTimerPage() {
 
     audioManager.playCompletion()
     if (mode === 'work') {
-      showSystemNotification('Session Complete! 🌱', 'Great focus session! Time to take a break.')
       markFirstSessionComplete()
       const timerState = timer?.getState()
       const actualDuration = timerState
