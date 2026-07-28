@@ -98,20 +98,25 @@ self.addEventListener('notificationclick', (event) => {
   const action = event.action
   const notification = event.notification
 
-  // Keep notification open if clicking actions, or close if body clicked
-  if (!action) {
-    notification.close()
+  // Action button tap: execute action in background WITHOUT opening/redirecting browser window
+  if (action) {
+    event.waitUntil(
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        for (const client of clientList) {
+          client.postMessage({ type: 'PWA_NOTIFICATION_ACTION', action })
+        }
+      })
+    )
+    return
   }
 
+  // Body tap: close notification and focus/open PWA app window
+  notification.close()
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if ('focus' in client) {
-          client.focus()
-          if (action) {
-            client.postMessage({ type: 'PWA_NOTIFICATION_ACTION', action })
-          }
-          return
+          return client.focus()
         }
       }
       if (self.clients.openWindow) {
