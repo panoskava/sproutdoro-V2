@@ -25,6 +25,9 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       VitePWA({
+        strategies: 'injectManifest',
+        srcDir: 'src',
+        filename: 'sw.ts',
         registerType: 'autoUpdate',
         manifest: {
           name: 'Sproutdoro - Focus Timer',

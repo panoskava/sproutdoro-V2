@@ -23,6 +23,12 @@ import { getPlantDefinition } from './plant-definitions'
 import { createSessionDots, updateSessionDots } from './components/SessionDots'
 import { createClockDial, updateClockDial } from './components/ClockDial'
 import { setupMediaSession, updateMediaSession, startSilentPlayback } from './media-session-manager'
+import {
+  initPWANotifications,
+  requestPWANotificationPermission,
+  updatePWANotification,
+  closePWANotification,
+} from './pwa-notification-manager'
 
 function formatTime(totalSeconds: number): { mm: string; ss: string } {
   const mins = Math.floor(totalSeconds / 60)
@@ -59,6 +65,7 @@ function clearTimerState(): void {
   } catch {
     // ignore
   }
+  closePWANotification()
 }
 
 function isDesktop(): boolean {
@@ -279,6 +286,37 @@ async function initTimerPage() {
     },
   })
 
+  initPWANotifications({
+    onPause: () => {
+      if (!timer) return
+      if (timer.getState().state === 'running') {
+        timer.pause()
+        audioManager.stopAmbient()
+      }
+    },
+    onResume: () => {
+      if (!timer) return
+      timer.start()
+      if (timer.getState().mode === 'work') audioManager.startAmbient(settings.sound)
+    },
+    onBreak: () => {
+      if (!timer) return
+      const state = timer.getState()
+      if (state.mode === 'work' && (state.state === 'running' || state.state === 'paused')) {
+        isOnImmediateBreak = true
+        const breakDurationSec = settings.shortBreakDuration * 60
+        timer.pauseForBreak(breakDurationSec)
+        showBreakOverlay()
+        updateTimerAdjustButtonsVisibility(true)
+      }
+    },
+    onSkip: () => {
+      if (!timer) return
+      timer.skip()
+      audioManager.stopAmbient()
+    },
+  })
+
   const intentionInput = document.getElementById('intention-input') as HTMLInputElement | null
   const primaryActionBtn = document.getElementById('btn-primary-action')
   const primaryActionIcon = document.getElementById('primary-action-icon')
@@ -355,6 +393,14 @@ async function initTimerPage() {
       `${mm}:${ss}`,
       state.totalSeconds,
       state.remainingSeconds,
+      intentionInput?.value?.trim() || undefined
+    )
+
+    // Update PWA Service Worker System Notification
+    updatePWANotification(
+      state.state,
+      state.mode,
+      `${mm}:${ss}`,
       intentionInput?.value?.trim() || undefined
     )
 
@@ -575,8 +621,8 @@ async function initTimerPage() {
       if (state.mode === 'work' && (state.state === 'idle' || state.state === 'complete')) {
         sessionStartTime = Date.now()
       }
-      // Start silent audio INSIDE the user gesture so browsers allow playback
-      // and display the OS media notification (lock screen / notification shade)
+      // Request PWA notification permission and start silent audio on user gesture
+      requestPWANotificationPermission()
       startSilentPlayback()
       timer.start()
       if (state.mode === 'work') {
