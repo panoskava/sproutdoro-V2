@@ -6,6 +6,9 @@ export interface PWANotificationActionHandlers {
 }
 
 let actionHandlers: PWANotificationActionHandlers | null = null
+let lastState: string | null = null
+let lastMode: string | null = null
+let lastIntention: string | undefined = undefined
 
 export function initPWANotifications(handlers: PWANotificationActionHandlers): void {
   actionHandlers = handlers
@@ -48,6 +51,16 @@ export function updatePWANotification(
   if (!('serviceWorker' in navigator)) return
   if (!('Notification' in window) || Notification.permission !== 'granted') return
 
+  // Prevent reloading notification every second tick.
+  // Only update notification card when state, mode, or intention changes!
+  if (state === lastState && mode === lastMode && intention === lastIntention) {
+    return
+  }
+
+  lastState = state
+  lastMode = mode
+  lastIntention = intention
+
   navigator.serviceWorker.ready
     .then((reg) => {
       if (state === 'idle' || state === 'complete') {
@@ -66,6 +79,10 @@ export function updatePWANotification(
 }
 
 export function closePWANotification(): void {
+  lastState = null
+  lastMode = null
+  lastIntention = undefined
+
   if (!('serviceWorker' in navigator)) return
   navigator.serviceWorker.ready
     .then((reg) => {

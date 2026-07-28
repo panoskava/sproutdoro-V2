@@ -43,11 +43,16 @@ self.addEventListener('message', (event) => {
   }
 
   if (data.type === 'UPDATE_TIMER_NOTIFICATION') {
-    const modeLabel =
-      data.mode === 'work' ? 'Focus Session' : data.mode === 'shortBreak' ? 'Short Break' : 'Long Break'
+    let title = '🌱 Sproutdoro Focus'
+    let body = data.intention ? `Focusing: ${data.intention}` : 'Focus Session Active'
 
-    const title = data.intention ? `${modeLabel}: ${data.intention}` : modeLabel
-    const body = `Time remaining: ${data.formattedTime}`
+    if (data.state === 'paused') {
+      title = '⏸️ Focus Paused — Sproutdoro'
+      body = data.intention ? `Paused: ${data.intention}` : 'Session Paused • Tap Resume to continue'
+    } else if (data.state === 'onBreak' || data.mode === 'shortBreak' || data.mode === 'longBreak') {
+      title = '☕ Break Time — Sproutdoro'
+      body = 'Relax & recharge your energy 🌿'
+    }
 
     interface SWNotificationAction {
       action: string
