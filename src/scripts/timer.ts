@@ -353,6 +353,8 @@ async function initTimerPage() {
       state.state,
       state.mode,
       `${mm}:${ss}`,
+      state.totalSeconds,
+      state.remainingSeconds,
       intentionInput?.value?.trim() || undefined
     )
 
@@ -596,6 +598,7 @@ async function initTimerPage() {
       if (!timer) return
       const state = timer.getState()
       if (state.mode !== 'work' || (state.state !== 'running' && state.state !== 'paused')) return
+      startSilentPlayback()
       isOnImmediateBreak = true
       const breakDurationSec = settings.shortBreakDuration * 60
       timer.pauseForBreak(breakDurationSec)

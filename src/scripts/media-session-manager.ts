@@ -1,22 +1,14 @@
 /**
- * Media Session Manager
+ * Media Session & Notification Manager
  *
- * Provides YouTube/Spotify-style OS-level media notifications (lock screen,
- * notification shade, Control Center) by playing a looping silent audio via
- * an HTMLAudioElement.
+ * Implements OS Live Notifications (Lock Screen, Notification Center, Status Bar)
+ * using a 10-second silent WAV Blob attached to a DOM HTMLAudioElement,
+ * combined with navigator.mediaSession metadata & setPositionState.
  *
- * CRITICAL: Browsers ONLY show OS media notifications when a native
- * HTMLAudioElement (or <video>) is actively playing. AudioContext / Web Audio
- * API sources are intentionally ignored. The previous implementation used
- * AudioContext.createBuffer() which is why it never worked.
- *
- * This version uses:
- *   1. A real silent .m4a audio file (public/sounds/silence.m4a)
- *   2. Fallback: an inline base64-encoded minimal silent MP3
- *
- * The looping silent audio keeps the browser "Now Playing" session alive,
- * so the OS displays mediaSession metadata and action handlers even when
- * the user leaves the app or locks the screen.
+ * Mobile & Desktop browsers require:
+ * 1. An HTMLAudioElement actively playing a valid audio track >= 5 seconds.
+ * 2. User-gesture initialization (.play() triggered from click event).
+ * 3. navigator.mediaSession.setPositionState({ duration, playbackRate, position }).
  */
 
 export interface MediaSessionHandlers {
@@ -26,72 +18,81 @@ export interface MediaSessionHandlers {
   onBreak: () => void
 }
 
-// Minimal valid silent MP3 frame (base64). This is a proper MPEG Audio
-// Layer 3 frame that decodes to silence. Used as fallback if the .m4a
-// file fails to load.
-const SILENT_MP3_BASE64 =
-  'SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRBHEAAAAAAD/+1DEAAAGAAGn9AAAIgAANP8AAABMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7UMQ2g8AAAaQAAAAgAAA0gAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ=='
-
 let silentAudio: HTMLAudioElement | null = null
 let isPlaying = false
 
 /**
- * Create the silent HTMLAudioElement on first use.
+ * Generate a 10-second silent 16-bit 44.1kHz PCM WAV file as a Blob.
+ * 10 seconds guarantees browsers recognize a valid duration > 5 seconds.
  */
-function getOrCreateSilentAudio(): HTMLAudioElement {
+function createSilentWavBlob(): Blob {
+  const sampleRate = 44100
+  const seconds = 10
+  const numSamples = sampleRate * seconds
+  const dataSize = numSamples * 2
+  const buffer = new ArrayBuffer(44 + dataSize)
+  const view = new DataView(buffer)
+
+  // RIFF header
+  view.setUint32(0, 0x52494646, false) // "RIFF"
+  view.setUint32(4, 36 + dataSize, true)
+  view.setUint32(8, 0x57415645, false) // "WAVE"
+
+  // fmt subchunk
+  view.setUint32(12, 0x666d7420, false) // "fmt "
+  view.setUint32(16, 16, true) // Subchunk1Size (16 for PCM)
+  view.setUint16(20, 1, true) // AudioFormat (1 for PCM)
+  view.setUint16(22, 1, true) // NumChannels (1)
+  view.setUint32(24, sampleRate, true) // SampleRate
+  view.setUint32(28, sampleRate * 2, true) // ByteRate
+  view.setUint16(32, 2, true) // BlockAlign
+  view.setUint16(34, 16, true) // BitsPerSample
+
+  // data subchunk
+  view.setUint32(36, 0x64617461, false) // "data"
+  view.setUint32(40, dataSize, true)
+
+  return new Blob([buffer], { type: 'audio/wav' })
+}
+
+/**
+ * Initialize or get the DOM HTMLAudioElement.
+ */
+export function getOrCreateSilentAudio(): HTMLAudioElement {
   if (silentAudio) return silentAudio
 
   silentAudio = document.createElement('audio')
+  silentAudio.id = 'sproutdoro-media-session-audio'
   silentAudio.loop = true
-  // Must be > 0 for iOS/Safari to register as active media playback.
-  // 0.01 is effectively inaudible.
-  silentAudio.volume = 0.01
+  silentAudio.volume = 0.01 // Minimal non-zero volume required for iOS/Android
 
-  // Try loading the real .m4a file first; fall back to inline base64 MP3
-  const m4aUrl = `${import.meta.env.BASE_URL}sounds/silence.m4a`
-
-  // Create two sources for maximum browser compatibility
-  const sourceM4a = document.createElement('source')
-  sourceM4a.src = m4aUrl
-  sourceM4a.type = 'audio/mp4'
-
-  const sourceMp3 = document.createElement('source')
-  sourceMp3.src = `data:audio/mpeg;base64,${SILENT_MP3_BASE64}`
-  sourceMp3.type = 'audio/mpeg'
-
-  silentAudio.appendChild(sourceM4a)
-  silentAudio.appendChild(sourceMp3)
-
-  // Preload so it's ready instantly when the user taps Start
+  const blob = createSilentWavBlob()
+  silentAudio.src = URL.createObjectURL(blob)
   silentAudio.preload = 'auto'
-  silentAudio.load()
 
+  document.body.appendChild(silentAudio)
   return silentAudio
 }
 
 /**
- * Start playing the silent audio to activate OS media controls.
- *
- * MUST be called inside a user gesture handler (click/tap) so the
- * browser's autoplay policy is satisfied.
+ * Start playing silent audio during user gesture.
  */
 export async function startSilentPlayback(): Promise<void> {
-  if (isPlaying) return
-
   const audio = getOrCreateSilentAudio()
 
   try {
-    const playPromise = audio.play()
-    if (playPromise) await playPromise
+    if (audio.paused) {
+      const p = audio.play()
+      if (p) await p
+    }
     isPlaying = true
   } catch (err) {
-    // Autoplay blocked — will retry on next user gesture
-    console.warn('[MediaSession] Silent playback blocked:', err)
+    console.warn('[MediaSession] Silent audio playback blocked:', err)
   }
 }
 
 /**
- * Pause silent audio. OS notification stays visible in "paused" state.
+ * Pause silent audio.
  */
 export function pauseSilentPlayback(): void {
   if (!silentAudio || !isPlaying) return
@@ -100,23 +101,30 @@ export function pauseSilentPlayback(): void {
 }
 
 /**
- * Stop silent audio entirely. Dismisses the OS notification.
+ * Stop silent audio entirely.
  */
 export function stopSilentPlayback(): void {
   if (!silentAudio) return
   silentAudio.pause()
-  silentAudio.currentTime = 0
+  try {
+    silentAudio.currentTime = 0
+  } catch {
+    // ignore
+  }
   isPlaying = false
 }
 
 /**
- * Register MediaSession action handlers (play, pause, skip, break).
- * Call once during page init.
+ * Setup Media Session Action Handlers and request Web Notification permission.
  */
 export function setupMediaSession(handlers: MediaSessionHandlers): void {
+  // Request Web Notifications permission if supported
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().catch(() => {})
+  }
+
   if (!('mediaSession' in navigator)) return
 
-  // Pre-create the audio element so it's ready for the first user gesture
   getOrCreateSilentAudio()
 
   try {
@@ -135,29 +143,24 @@ export function setupMediaSession(handlers: MediaSessionHandlers): void {
       handlers.onBreak()
     })
   } catch {
-    // Handler registration unsupported
+    // Action handler registration unsupported
   }
 }
 
 /**
- * Update the OS media notification metadata each tick.
- *
- * - running/onBreak → start silent audio, playbackState = 'playing'
- * - paused          → pause silent audio, playbackState = 'paused'
- * - idle/complete   → stop silent audio, clear notification
+ * Update OS Media Notification metadata & setPositionState on every tick.
  */
 export function updateMediaSession(
   state: 'idle' | 'running' | 'paused' | 'onBreak' | 'complete',
   mode: 'work' | 'shortBreak' | 'longBreak',
   formattedTime: string,
+  totalSeconds: number,
+  remainingSeconds: number,
   intention?: string
 ): void {
   if (!('mediaSession' in navigator)) return
 
   if (state === 'running' || state === 'onBreak') {
-    // Don't call startSilentPlayback here on every tick —
-    // it was already started during the user gesture.
-    // Just ensure playbackState is correct.
     navigator.mediaSession.playbackState = 'playing'
   } else if (state === 'paused') {
     pauseSilentPlayback()
@@ -179,7 +182,7 @@ export function updateMediaSession(
 
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
-      title: `${title} — ${formattedTime}`,
+      title: `${title} (${formattedTime})`,
       artist: 'Sproutdoro',
       album: 'Focus Timer',
       artwork: [
@@ -195,7 +198,17 @@ export function updateMediaSession(
         },
       ],
     })
-  } catch {
-    // MediaMetadata unsupported
+
+    // Set position state so OS displays seekbar & duration
+    if ('setPositionState' in navigator.mediaSession && totalSeconds > 0) {
+      const position = Math.max(0, Math.min(totalSeconds, totalSeconds - remainingSeconds))
+      navigator.mediaSession.setPositionState({
+        duration: Math.max(1, totalSeconds),
+        playbackRate: 1,
+        position: position,
+      })
+    }
+  } catch (err) {
+    console.warn('[MediaSession] Failed to update metadata:', err)
   }
 }
