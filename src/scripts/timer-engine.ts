@@ -23,6 +23,7 @@ export class Timer {
   private state: TimerState
   private intervalId: number | null = null
   private transitionTimeoutId: number | null = null
+  private lastTickTimestamp: number | null = null
 
   constructor(
     settings: Settings,
@@ -50,9 +51,14 @@ export class Timer {
 
   private tick() {
     if (this.state.state !== 'running' && this.state.state !== 'onBreak') return
-    this.state.remainingSeconds -= 1
+    const now = Date.now()
+    const elapsed = this.lastTickTimestamp ? Math.max(1, Math.floor((now - this.lastTickTimestamp) / 1000)) : 1
+    this.lastTickTimestamp = now
+
+    this.state.remainingSeconds = Math.max(0, this.state.remainingSeconds - elapsed)
     if (this.state.remainingSeconds <= 0) {
       this.state.remainingSeconds = 0
+      this.lastTickTimestamp = null
       if (this.state.state === 'onBreak') {
         this.state.state = 'complete'
         this.clearTimer()
@@ -90,6 +96,8 @@ export class Timer {
 
     this.state.mode = nextMode
     this.state.state = 'idle'
+    this.state.adjustmentOffset = 0
+    this.state.modeAtAdjustmentStart = null
     this.state.totalSeconds =
       nextMode === 'work'
         ? this.settings.workDuration * 60
@@ -109,6 +117,7 @@ export class Timer {
       window.clearInterval(this.intervalId)
       this.intervalId = null
     }
+    this.lastTickTimestamp = null
   }
 
   private clearTransitionTimeout() {
@@ -122,6 +131,7 @@ export class Timer {
     if (this.state.state === 'running') return
     this.clearTransitionTimeout()
     this.state.state = 'running'
+    this.lastTickTimestamp = Date.now()
     this.onUpdate({ ...this.state })
     this.intervalId = window.setInterval(() => this.tick(), 1000)
   }
@@ -136,6 +146,7 @@ export class Timer {
   resume() {
     if (this.state.state !== 'paused') return
     this.state.state = 'running'
+    this.lastTickTimestamp = Date.now()
     this.onUpdate({ ...this.state })
     this.intervalId = window.setInterval(() => this.tick(), 1000)
   }
@@ -144,12 +155,15 @@ export class Timer {
     this.clearTimer()
     this.clearTransitionTimeout()
     this.state.state = 'idle'
+    this.state.adjustmentOffset = 0
+    this.state.modeAtAdjustmentStart = null
     this.state.remainingSeconds = this.state.totalSeconds
     this.onUpdate({ ...this.state })
   }
 
   pauseForBreak(breakDurationSeconds: number): void {
     if (this.state.mode !== 'work' || (this.state.state !== 'running' && this.state.state !== 'paused')) return
+    const validBreakDuration = Math.max(1, Math.floor(breakDurationSeconds || 300))
     this.clearTimer()
     this.state.breakBookmark = {
       remainingSeconds: this.state.remainingSeconds,
@@ -159,8 +173,9 @@ export class Timer {
     }
     this.state.mode = 'shortBreak'
     this.state.state = 'onBreak'
-    this.state.totalSeconds = breakDurationSeconds
-    this.state.remainingSeconds = breakDurationSeconds
+    this.state.totalSeconds = validBreakDuration
+    this.state.remainingSeconds = validBreakDuration
+    this.lastTickTimestamp = Date.now()
     this.onUpdate({ ...this.state })
     this.intervalId = window.setInterval(() => this.tick(), 1000)
   }

@@ -18,6 +18,9 @@ export function createMobileNav(currentPage: string): HTMLElement {
 
     const a = document.createElement('a')
     a.href = item.href
+    if (isActive) {
+      a.setAttribute('aria-current', 'page')
+    }
     a.className = `flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all duration-200 ${
       isActive ? 'text-primary' : 'text-on-surface/50'
     }`

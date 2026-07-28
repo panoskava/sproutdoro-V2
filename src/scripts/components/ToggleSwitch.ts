@@ -37,7 +37,7 @@ export function createToggleSwitch(props: ToggleSwitchProps): HTMLElement {
   checkbox.setAttribute('aria-label', label)
 
   const track = document.createElement('div')
-  track.className = `w-11 h-6 rounded-full peer transition-colors duration-200 ${
+  track.className = `w-11 h-6 rounded-full peer transition-colors duration-200 peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-focus-visible:ring-offset-2 ${
     checked ? 'bg-primary' : 'bg-surface-container-high'
   }`
 
@@ -49,7 +49,7 @@ export function createToggleSwitch(props: ToggleSwitchProps): HTMLElement {
   checkbox.addEventListener('change', () => {
     const isChecked = checkbox.checked
     checkbox.setAttribute('aria-checked', String(isChecked))
-    track.className = `w-11 h-6 rounded-full peer transition-colors duration-200 ${
+    track.className = `w-11 h-6 rounded-full peer transition-colors duration-200 peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-focus-visible:ring-offset-2 ${
       isChecked ? 'bg-primary' : 'bg-surface-container-high'
     }`
     thumb.className = `absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${

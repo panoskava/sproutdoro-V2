@@ -116,6 +116,7 @@ export function showWelcomeModal(): void {
   const cleanup = setupModal(overlay, card, {
     onEscape: () => {
       markOnboardingComplete()
+      cleanup()
       overlay.remove()
     },
     initialFocus: ctaBtn,

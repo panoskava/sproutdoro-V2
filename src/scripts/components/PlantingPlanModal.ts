@@ -164,11 +164,16 @@ export function createPlantingPlanModal(props: PlantingPlanModalProps): HTMLElem
   modal.appendChild(plantList)
   overlay.appendChild(modal)
 
+  const handleClose = () => {
+    cleanup()
+    onClose()
+  }
+
   overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) onClose()
+    if (e.target === overlay) handleClose()
   })
 
-  setupModal(overlay, modal, { onEscape: onClose, initialFocus: closeBtn })
+  const cleanup = setupModal(overlay, modal, { onEscape: handleClose, initialFocus: closeBtn })
 
   return overlay
 }

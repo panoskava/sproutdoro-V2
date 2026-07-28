@@ -68,6 +68,11 @@
     border: 1px solid rgba(255, 255, 255, 0.4);
   }
   
+  .dark .glass-sage {
+    background: rgba(28, 33, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
   .timer-glass {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
     backdrop-filter: blur(16px);
@@ -75,13 +80,25 @@
     border: 1px solid rgba(255, 255, 255, 0.5);
     box-shadow: 0 8px 32px 0 rgba(81, 98, 51, 0.1);
   }
-  
+
+  .dark .timer-glass {
+    background: linear-gradient(135deg, rgba(35, 42, 26, 0.7) 0%, rgba(20, 24, 15, 0.4) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+
   .stat-card-glass {
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.8);
     box-shadow: 0 4px 24px -2px rgba(81, 98, 51, 0.05);
+  }
+
+  .dark .stat-card-glass {
+    background: rgba(28, 33, 20, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.2);
   }
   
   .image-mask {

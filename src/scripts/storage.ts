@@ -168,9 +168,15 @@ export async function getTodaySessions(): Promise<Session[]> {
   const startOfDay = new Date(
     now.getFullYear(),
     now.getMonth(),
-    now.getDate()
+    now.getDate(),
+    0, 0, 0, 0
   )
-  const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1)
+  const endOfDay = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    23, 59, 59, 999
+  )
   return getSessions(startOfDay, endOfDay)
 }
 
@@ -247,17 +253,17 @@ export function pickWeightedPlantType(): PlantDefinition {
   }
 
   const totalWeight = PLANT_DEFINITIONS.reduce(
-    (sum, p) => sum + weights[p.rarity],
+    (sum, p) => sum + weights[p.rarity]!,
     0
   )
 
   let rand = Math.random() * totalWeight
   for (const def of PLANT_DEFINITIONS) {
-    rand -= weights[def.rarity]
+    rand -= weights[def.rarity]!
     if (rand <= 0) return def
   }
 
-  return PLANT_DEFINITIONS[0]
+  return PLANT_DEFINITIONS[0]!
 }
 
 export async function getFeaturedPlant(): Promise<Plant | undefined> {
@@ -299,7 +305,8 @@ function getWeekStart(dateStr: string): string {
 
 async function computeInsights(): Promise<Insights> {
   const db = await getDB()
-  const sessions: Session[] = await db.getAll('sessions')
+  const rawSessions: Session[] = await db.getAll('sessions')
+  const sessions = [...rawSessions].sort((a, b) => a.startTime - b.startTime)
   const plants: Plant[] = await db.getAll('plants')
   const categories: Category[] = await db.getAll('categories')
 
@@ -358,8 +365,8 @@ async function computeInsights(): Promise<Insights> {
     let run = 1
     longestStreak = 1
     for (let i = 1; i < sortedDates.length; i++) {
-      const prev = new Date(sortedDates[i - 1] + 'T00:00:00').getTime()
-      const curr = new Date(sortedDates[i] + 'T00:00:00').getTime()
+      const prev = new Date(sortedDates[i - 1]! + 'T00:00:00').getTime()
+      const curr = new Date(sortedDates[i]! + 'T00:00:00').getTime()
       if ((curr - prev) / (24 * 60 * 60 * 1000) === 1) {
         run += 1
         longestStreak = Math.max(longestStreak, run)
@@ -389,7 +396,7 @@ async function computeInsights(): Promise<Insights> {
   }))
 
   const lastSessionTimestamp =
-    sessions.length > 0 ? Math.max(...sessions.map((s) => s.startTime)) : 0
+    sessions.length > 0 ? sessions.reduce((max, s) => Math.max(max, s.startTime), 0) : 0
   const lastSessionDate = lastSessionTimestamp > 0
     ? new Date(lastSessionTimestamp).setHours(0, 0, 0, 0)
     : 0

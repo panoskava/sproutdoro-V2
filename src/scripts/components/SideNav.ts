@@ -24,6 +24,9 @@ export function createSideNav(currentPage: string): HTMLElement {
     const li = document.createElement('li')
     const a = document.createElement('a')
     a.href = item.href
+    if (isActive) {
+      a.setAttribute('aria-current', 'page')
+    }
     a.className = `flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 ${
       isActive
         ? 'bg-primary-container/20 text-primary font-label font-semibold'

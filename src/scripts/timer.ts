@@ -272,6 +272,15 @@ async function initTimerPage() {
     if (timeMins) timeMins.textContent = mm
     if (timeSecs) timeSecs.textContent = ss
 
+    const modeLabel = state.mode === 'work' ? 'Focus' : state.mode === 'shortBreak' ? 'Short break' : 'Long break'
+    if (state.state === 'running') {
+      document.title = `${mm}:${ss} - ${modeLabel} | Sproutdoro`
+    } else if (state.state === 'paused') {
+      document.title = `[Paused] ${mm}:${ss} - Sproutdoro`
+    } else {
+      document.title = 'Sproutdoro - Focus Timer'
+    }
+
     // Update progress ring
     if (timerCircle) {
       const progress =
@@ -341,7 +350,6 @@ async function initTimerPage() {
     const currentMinute = Math.floor(state.remainingSeconds / 60)
     if (state.state === 'running' && currentMinute !== lastAnnouncedMinute) {
       lastAnnouncedMinute = currentMinute
-      const modeLabel = state.mode === 'work' ? 'Focus' : state.mode === 'shortBreak' ? 'Short break' : 'Long break'
       liveRegion.textContent = `${modeLabel}: ${mm} minutes ${ss} seconds remaining`
     }
     if (state.state === 'idle' || state.state === 'paused') {
@@ -372,7 +380,7 @@ async function initTimerPage() {
       markFirstSessionComplete()
       const timerState = timer?.getState()
       const actualDuration = timerState
-        ? Math.round(((timerState.totalSeconds - (timerState.adjustmentOffset ?? 0)) / 60) * 10) / 10
+        ? Math.round(((timerState.totalSeconds) / 60) * 10) / 10
         : 0
       const session = {
         id: crypto.randomUUID(),
@@ -402,7 +410,7 @@ async function initTimerPage() {
           const definition = getPlantDefinition(activePlant.type)
           if (definition) {
             const progressRatio = activePlant.totalFocusMinutes / definition.focusMinutesRequired
-            const newLevel = Math.min(5, Math.floor(progressRatio) + 1) as 1 | 2 | 3 | 4 | 5
+            const newLevel = Math.min(5, Math.floor(progressRatio * 4) + 1) as 1 | 2 | 3 | 4 | 5
             if (newLevel > activePlant.level) {
               activePlant.level = newLevel
             }
@@ -487,7 +495,7 @@ async function initTimerPage() {
   const savedState = loadTimerState()
   if (savedState) {
     if (savedState.state === 'running' && savedState.lastTick) {
-      const elapsed = Math.floor((Date.now() - savedState.lastTick) / 1000)
+      const elapsed = Math.max(0, Math.floor((Date.now() - savedState.lastTick) / 1000))
       savedState.remainingSeconds = Math.max(0, savedState.remainingSeconds - elapsed)
       if (savedState.remainingSeconds <= 0) {
         savedState.state = 'idle'
@@ -637,7 +645,8 @@ async function initTimerPage() {
     const el = document.activeElement
     if (!el) return false
     const tag = el.tagName
-    return tag === 'INPUT' || tag === 'TEXTAREA' || (el as HTMLElement).isContentEditable
+    const role = el.getAttribute('role')
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON' || role === 'button' || (el as HTMLElement).isContentEditable
   }
 
   document.addEventListener('keydown', (e) => {

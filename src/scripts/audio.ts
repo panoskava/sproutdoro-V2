@@ -110,11 +110,16 @@ export class AudioManager {
       this.ambientAudio.volume = this.isMuted ? 0 : 0.3 * this.globalVolume
     }
     if (this.ambientGains.length > 0) {
+      const ctx = this.getAudioContext()
       for (const gain of this.ambientGains) {
-        gain.gain.setValueAtTime(
-          this.isMuted ? 0 : 0.15 * this.globalVolume,
-          this.getAudioContext().currentTime
-        )
+        try {
+          gain.gain.setValueAtTime(
+            this.isMuted ? 0 : 0.15 * this.globalVolume,
+            ctx.currentTime
+          )
+        } catch {
+          // ignore
+        }
       }
     }
   }
@@ -125,8 +130,13 @@ export class AudioManager {
       this.ambientAudio.volume = 0
     }
     if (this.ambientGains.length > 0) {
+      const ctx = this.getAudioContext()
       for (const gain of this.ambientGains) {
-        gain.gain.setValueAtTime(0, this.getAudioContext().currentTime)
+        try {
+          gain.gain.setValueAtTime(0, ctx.currentTime)
+        } catch {
+          // ignore
+        }
       }
     }
   }
@@ -137,11 +147,16 @@ export class AudioManager {
       this.ambientAudio.volume = 0.3 * this.globalVolume
     }
     if (this.ambientGains.length > 0) {
+      const ctx = this.getAudioContext()
       for (const gain of this.ambientGains) {
-        gain.gain.setValueAtTime(
-          0.15 * this.globalVolume,
-          this.getAudioContext().currentTime
-        )
+        try {
+          gain.gain.setValueAtTime(
+            0.15 * this.globalVolume,
+            ctx.currentTime
+          )
+        } catch {
+          // ignore
+        }
       }
     }
   }
@@ -150,30 +165,34 @@ export class AudioManager {
     if (!this.audioCtx) {
       this.audioCtx = new AudioContext()
     }
-    // Ensure context is running (browsers may suspend it until user gesture)
     if (this.audioCtx.state === 'suspended') {
-      this.audioCtx.resume().catch(console.error)
+      this.audioCtx.resume().catch(() => {})
     }
     return this.audioCtx
   }
 
   private playBellTone(frequency: number, duration: number): void {
+    const validDuration = Math.max(0.1, duration)
     const ctx = this.getAudioContext()
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
 
     osc.type = 'sine'
     osc.frequency.value = frequency
-    gain.gain.setValueAtTime(
-      this.isMuted ? 0 : 0.5 * this.globalVolume,
-      ctx.currentTime
-    )
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
+    try {
+      gain.gain.setValueAtTime(
+        this.isMuted ? 0 : 0.5 * this.globalVolume,
+        ctx.currentTime
+      )
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + validDuration)
+    } catch {
+      // ignore
+    }
 
     osc.connect(gain)
     gain.connect(ctx.destination)
     osc.start(ctx.currentTime)
-    osc.stop(ctx.currentTime + duration)
+    osc.stop(ctx.currentTime + validDuration)
   }
 
   private synthesizeAmbient(soundName: string): void {
@@ -208,7 +227,7 @@ export class AudioManager {
     } else if (soundName === 'wind-chimes') {
       const playChime = () => {
         const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51]
-        const freq = notes[Math.floor(Math.random() * notes.length)]
+        const freq = notes[Math.floor(Math.random() * notes.length)]!
         const duration = 2 + Math.random() * 2
 
         const osc = ctx.createOscillator()
@@ -216,19 +235,29 @@ export class AudioManager {
 
         osc.type = 'sine'
         osc.frequency.value = freq
-        gain.gain.setValueAtTime(
-          this.isMuted ? 0 : 0.08 * this.globalVolume,
-          ctx.currentTime
-        )
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
+        try {
+          gain.gain.setValueAtTime(
+            this.isMuted ? 0 : 0.08 * this.globalVolume,
+            ctx.currentTime
+          )
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
+        } catch {
+          // ignore
+        }
 
         osc.connect(gain)
         gain.connect(ctx.destination)
-        osc.start()
-        osc.stop(ctx.currentTime + duration)
 
         this.ambientNodes.push(osc)
         this.ambientGains.push(gain)
+
+        osc.onended = () => {
+          this.ambientNodes = this.ambientNodes.filter((n) => n !== osc)
+          this.ambientGains = this.ambientGains.filter((g) => g !== gain)
+        }
+
+        osc.start()
+        osc.stop(ctx.currentTime + duration)
       }
 
       playChime()
@@ -246,23 +275,33 @@ export class AudioManager {
         const gain = ctx.createGain()
 
         osc.type = 'sine'
-        osc.frequency.setValueAtTime(2000, ctx.currentTime)
-        osc.frequency.exponentialRampToValueAtTime(3000, ctx.currentTime + 0.1)
-        osc.frequency.exponentialRampToValueAtTime(2500, ctx.currentTime + 0.15)
+        try {
+          osc.frequency.setValueAtTime(2000, ctx.currentTime)
+          osc.frequency.exponentialRampToValueAtTime(3000, ctx.currentTime + 0.1)
+          osc.frequency.exponentialRampToValueAtTime(2500, ctx.currentTime + 0.15)
 
-        gain.gain.setValueAtTime(
-          this.isMuted ? 0 : 0.05 * this.globalVolume,
-          ctx.currentTime
-        )
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2)
+          gain.gain.setValueAtTime(
+            this.isMuted ? 0 : 0.05 * this.globalVolume,
+            ctx.currentTime
+          )
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2)
+        } catch {
+          // ignore
+        }
 
         osc.connect(gain)
         gain.connect(ctx.destination)
-        osc.start()
-        osc.stop(ctx.currentTime + 0.2)
 
         this.ambientNodes.push(osc)
         this.ambientGains.push(gain)
+
+        osc.onended = () => {
+          this.ambientNodes = this.ambientNodes.filter((n) => n !== osc)
+          this.ambientGains = this.ambientGains.filter((g) => g !== gain)
+        }
+
+        osc.start()
+        osc.stop(ctx.currentTime + 0.2)
       }
 
       const scheduleNext = () => {
