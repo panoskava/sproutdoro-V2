@@ -16,7 +16,7 @@
   "devDependencies": {
     "@fontsource/be-vietnam-pro": "^5.2.5",
     "@fontsource/plus-jakarta-sans": "^5.2.5",
-    "@material-symbols/font-400": "^0.31.2",
+    "@material-symbols/font-400": "^0.45.9",
     "autoprefixer": "^10.4.16",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^26.1.0",
